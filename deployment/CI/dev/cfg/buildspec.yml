@@ -14,21 +14,21 @@ phases:
       - wget https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - unzip terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - mv terraform /usr/local/bin/
+      - echo $CODEBUILD_SOURCE_VERSION || echo CODEBUILD_SOURCE_VERSION
+      - BRANCH_NAME=$CODEBUILD_SOURCE_VERSION
+      - printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
       - | 
-      echo $CODEBUILD_SOURCE_VERSION || echo CODEBUILD_SOURCE_VERSION
-      BRANCH_NAME=$CODEBUILD_SOURCE_VERSION
-      printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
-      for dir in deployment/*/
-      do
-          if [ -d "${dir}/${BRANCH_NAME}/" ]; then
-              cd "${dir}/${BRANCH_NAME}/"
-              # terraform init -backend-config="../${BRANCH_NAME}_backend.tf"
-              cd - > /dev/null
-          elif [ -d "${dir}/${BRANCH_NAME}/tf/" ]; then
-              cd "${dir}/${BRANCH_NAME}/tf/"
-              terraform init
-              cd - > /dev/null
-          else
-              echo "No Terraform file were found in ${dir}"
-          fi
-      done
+        for dir in deployment/*/
+        do
+            if [ -d "${dir}/${BRANCH_NAME}/" ]; then
+                cd "${dir}/${BRANCH_NAME}/"
+                # terraform init -backend-config="../${BRANCH_NAME}_backend.tf"
+                cd - > /dev/null
+            elif [ -d "${dir}/${BRANCH_NAME}/tf/" ]; then
+                cd "${dir}/${BRANCH_NAME}/tf/"
+                terraform init
+                cd - > /dev/null
+            else
+                echo "No Terraform file were found in ${dir}"
+            fi
+        done
