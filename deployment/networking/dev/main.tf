@@ -18,7 +18,7 @@ module "vpc" {
   private_subnet_suffix = "private"
 
   #nat gateway
-  enable_nat_gateway = false
+  enable_nat_gateway = true
   single_nat_gateway = true
   one_nat_gateway_per_az = false
   reuse_nat_ips = false

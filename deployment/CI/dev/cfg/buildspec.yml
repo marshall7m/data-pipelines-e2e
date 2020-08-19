@@ -17,8 +17,7 @@ phases:
       - | 
       echo $CODEBUILD_SOURCE_VERSION || echo CODEBUILD_SOURCE_VERSION
       BRANCH_NAME=$CODEBUILD_SOURCE_VERSION
-      printf "Looking for terraform files within the following directory format:
-      \tdeployment/\$BRANCH_NAME/.tf \n\tdeployment/\$BRANCH_NAME/tf/.tf\n"
+      printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
       for dir in deployment/*/
       do
           if [ -d "${dir}/${BRANCH_NAME}/" ]; then
