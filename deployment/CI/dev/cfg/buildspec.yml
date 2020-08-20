@@ -36,9 +36,8 @@ phases:
         case $BRANCH_NAME in
           dev|prod) TF_COMMAND=apply -auto-approve;;
           *) TF_COMMAND=plan;;
-      #-out=terraform.tfplan
         esac
-        
+
         for service in deployment/*/
         do 
           if [ -d "${service}/${BRANCH_NAME}/" ]; then
