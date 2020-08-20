@@ -28,17 +28,15 @@ phases:
         done
   build:
     commands:
-      - echo $CODEBUILD_SOURCE_VERSION
-      - echo $CODEBUILD_WEBHOOK_BASE_REF
-      - echo $CODEBUILD_WEBHOOK_EVENT
-      - echo $CODEBUILD_WEBHOOK_HEAD_REF
-      - echo $CODEBUILD_WEBHOOK_TRIGGER
-      - BRANCH_NAME=$CODEBUILD_SOURCE_VERSION
+      # - echo $CODEBUILD_WEBHOOK_EVENT
+      # - echo $CODEBUILD_WEBHOOK_TRIGGER
+      - BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
       - printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
       - | 
         case $BRANCH_NAME in
           dev|prod) TF_COMMAND=apply -auto-approve;;
           *) TF_COMMAND=plan;;
+      #-out=terraform.tfplan
         esac
         
         for service in deployment/*/
@@ -53,6 +51,11 @@ phases:
                 cd $dir > /dev/null
                 echo ""
                 echo "*************** TERRAFORM INIT ******************"
+                echo "******* At directory: ${dir} ********"
+                echo "*************************************************"
+                terraform init
+                echo ""
+                echo "*************** TERRAFORM $TF_COMMAND ******************"
                 echo "******* At directory: ${dir} ********"
                 echo "*************************************************"
                 terraform $TF_COMMAND
