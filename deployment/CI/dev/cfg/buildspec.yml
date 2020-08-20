@@ -6,45 +6,23 @@ phases:
       - wget https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - unzip terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - mv terraform /usr/local/bin/
-  pre_build:
-    commands:
-      - echo $CODEBUILD_SOURCE_VERSION || echo CODEBUILD_SOURCE_VERSION
-      - BRANCH_NAME=$CODEBUILD_SOURCE_VERSION
-      - printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
-      - | 
-        for dir in deployment/*/
-        do
-            if [ -d "${dir}/${BRANCH_NAME}/" ]; then
-                cd "${dir}/${BRANCH_NAME}/"
-                # terraform init -backend-config="../${BRANCH_NAME}_backend.tf"
-                cd - > /dev/null
-            elif [ -d "${dir}/${BRANCH_NAME}/tf/" ]; then
-                cd "${dir}/${BRANCH_NAME}/tf/"
-                terraform init
-                cd - > /dev/null
-            else
-                echo "No Terraform file were found in ${dir}"
-            fi
-        done
   build:
     commands:
       # - echo $CODEBUILD_WEBHOOK_EVENT
       # - echo $CODEBUILD_WEBHOOK_TRIGGER
       - BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
-      - printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
       - | 
         case $BRANCH_NAME in
-          dev|prod) TF_COMMAND=apply -auto-approve;;
-          *) TF_COMMAND=plan;;
+          dev|prod) TF_COMMAND="apply -auto-approve";; \
+          *) TF_COMMAND="plan";;
         esac
-
-        for service in deployment/*/
-        do 
+      - echo $BRANCH_NAME
+      - |
+        for service in deployment/*/; do
           if [ -d "${service}/${BRANCH_NAME}/" ]; then
             #get list of non-hidden directories within ${service}/${BRANCH_NAME}/
             service_dir_list=$(find "${service}${BRANCH_NAME}" -type d | grep -v '/\.')
-            for dir in $service_dir_list
-            do 
+            for dir in $service_dir_list; do
               #if directory contains .tf or .tfvars files
               if (ls ${dir}/*.tf) > /dev/null 2>&1 || (ls ${dir}/*.tfvars) > /dev/null 2>&1; then
                 cd $dir > /dev/null
@@ -68,4 +46,4 @@ phases:
             echo "No ${BRANCH_NAME} environment directory exists within ${dir}"
           fi
         done
-        
+    
