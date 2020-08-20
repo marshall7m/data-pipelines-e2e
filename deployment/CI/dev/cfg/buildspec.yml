@@ -13,16 +13,19 @@ phases:
       - BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
       - printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
       - | 
-        case $BRANCH_NAME in \
+        case $BRANCH_NAME in
           dev|prod) TF_COMMAND="apply -auto-approve";; \
           *) TF_COMMAND="plan";;
         esac
       - echo $BRANCH_NAME
+      - echo $TF_COMMAND
+      - case $BRANCH_NAME in dev|prod) TF_COMMAND="apply -auto-approve";; *) TF_COMMAND="plan";; esac
+      - echo $TF_COMMAND
       - |
-        for service in deployment/*/ \
+        for service in deployment/*/;
           do
-            if [ -d "${service}/${BRANCH_NAME}/" ]; \
-            then \
+            if [ -d "${service}/${BRANCH_NAME}/" ];
+            then
               #get list of non-hidden directories within ${service}/${BRANCH_NAME}/
               service_dir_list=$(find "${service}${BRANCH_NAME}" -type d | grep -v '/\.')
               for dir in $service_dir_list do \
@@ -50,4 +53,33 @@ phases:
               echo "No ${BRANCH_NAME} environment directory exists within ${dir}"
             fi
           done
+    finally:
+      - for service in deployment/*/; do
+        if [ -d "${service}/${BRANCH_NAME}/" ]; then
+          #get list of non-hidden directories within ${service}/${BRANCH_NAME}/
+          service_dir_list=$(find "${service}${BRANCH_NAME}" -type d | grep -v '/\.')
+          for dir in $service_dir_list; do 
+            #if directory contains .tf or .tfvars files
+            if (ls ${dir}/*.tf) > /dev/null 2>&1 || (ls ${dir}/*.tfvars) > /dev/null 2>&1; then
+              cd $dir > /dev/null
+              echo ""
+              echo "*************** TERRAFORM INIT ******************"
+              echo "******* At directory: ${dir} ********"
+              echo "*************************************************"
+              terraform init
+              echo ""
+              echo "*************** TERRAFORM $TF_COMMAND ******************"
+              echo "******* At directory: ${dir} ********"
+              echo "*************************************************"
+              terraform $TF_COMMAND
+              cd - > /dev/null 
+            else
+              :
+              # echo "No Terraform file were found in ${dir}"
+            fi
+          done 
+        else
+          echo "No ${BRANCH_NAME} environment directory exists within ${dir}"
+        fi
+      done
         
