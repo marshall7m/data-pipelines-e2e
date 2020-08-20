@@ -13,9 +13,9 @@ phases:
       - BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
       - printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
       - | 
-        case $BRANCH_NAME in
-          dev|prod) TF_COMMAND="apply -auto-approve";;
-          *) TF_COMMAND="plan";;
+        case $BRANCH_NAME in \
+          (dev|prod) TF_COMMAND="apply -auto-approve";; \
+          (*) TF_COMMAND="plan";;
         esac
       - echo "Branch: ${BRANCH_NAME}"
       - echo "AWS_REGION: ${AWS_REGION}"
