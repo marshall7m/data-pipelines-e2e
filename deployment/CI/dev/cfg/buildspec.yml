@@ -28,7 +28,11 @@ phases:
         done
   build:
     commands:
-      - echo $CODEBUILD_SOURCE_VERSION || echo CODEBUILD_SOURCE_VERSION
+      - echo $CODEBUILD_SOURCE_VERSION
+      - echo $CODEBUILD_WEBHOOK_BASE_REF
+      - echo $CODEBUILD_WEBHOOK_EVENT
+      - echo $CODEBUILD_WEBHOOK_HEAD_REF
+      - echo $CODEBUILD_WEBHOOK_TRIGGER
       - BRANCH_NAME=$CODEBUILD_SOURCE_VERSION
       - printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
       - | 
