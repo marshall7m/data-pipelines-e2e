@@ -13,21 +13,22 @@ phases:
       - BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
       - printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
       - | 
-        case $BRANCH_NAME in
-          dev|prod) TF_COMMAND="apply -auto-approve";;
+        case $BRANCH_NAME in \
+          dev|prod) TF_COMMAND="apply -auto-approve";; \
           *) TF_COMMAND="plan";;
         esac
       - echo $BRANCH_NAME
       - |
-        for service in deployment/*/
-          do 
-            if [ -d "${service}/${BRANCH_NAME}/" ]; then
+        for service in deployment/*/ \
+          do
+            if [ -d "${service}/${BRANCH_NAME}/" ]; \
+            then \
               #get list of non-hidden directories within ${service}/${BRANCH_NAME}/
               service_dir_list=$(find "${service}${BRANCH_NAME}" -type d | grep -v '/\.')
-              for dir in $service_dir_list
-              do 
+              for dir in $service_dir_list do \
                 #if directory contains .tf or .tfvars files
-                if (ls ${dir}/*.tf) > /dev/null 2>&1 || (ls ${dir}/*.tfvars) > /dev/null 2>&1; then
+                if (ls ${dir}/*.tf) > /dev/null 2>&1 || (ls ${dir}/*.tfvars) > /dev/null 2>&1; \
+                then
                   cd $dir > /dev/null
                   echo ""
                   echo "*************** TERRAFORM INIT ******************"
