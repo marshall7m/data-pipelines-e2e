@@ -6,7 +6,7 @@ phases:
       - wget https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - unzip terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - mv terraform /usr/local/bin/
-  prebuild:
+  pre_build:
     commands:
       - echo $CODEBUILD_SOURCE_VERSION || echo CODEBUILD_SOURCE_VERSION
       - BRANCH_NAME=$CODEBUILD_SOURCE_VERSION
