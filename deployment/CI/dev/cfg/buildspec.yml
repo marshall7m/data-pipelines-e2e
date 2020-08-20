@@ -6,26 +6,6 @@ phases:
       - wget https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - unzip terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - mv terraform /usr/local/bin/
-  pre_build:
-    commands:
-      - echo $CODEBUILD_SOURCE_VERSION || echo CODEBUILD_SOURCE_VERSION
-      - BRANCH_NAME=$CODEBUILD_SOURCE_VERSION
-      - printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
-      - | 
-        for dir in deployment/*/
-        do
-            if [ -d "${dir}/${BRANCH_NAME}/" ]; then
-                cd "${dir}/${BRANCH_NAME}/"
-                # terraform init -backend-config="../${BRANCH_NAME}_backend.tf"
-                cd - > /dev/null
-            elif [ -d "${dir}/${BRANCH_NAME}/tf/" ]; then
-                cd "${dir}/${BRANCH_NAME}/tf/"
-                terraform init
-                cd - > /dev/null
-            else
-                echo "No Terraform file were found in ${dir}"
-            fi
-        done
   build:
     commands:
       # - echo $CODEBUILD_WEBHOOK_EVENT
@@ -34,11 +14,14 @@ phases:
       - printf "Looking for terraform files within the following directory format:\n\tdeployment/SERVICE/\$BRANCH_NAME/.tf \n\tdeployment/SERVICE/\$BRANCH_NAME/tf/.tf\n"
       - | 
         case $BRANCH_NAME in
-          dev|prod) TF_COMMAND=apply -auto-approve;;
-          *) TF_COMMAND=plan;;
+          dev|prod) TF_COMMAND="apply -auto-approve";;
+          *) TF_COMMAND="plan";;
         esac
-
-        for service in deployment/*/
+      - echo "Branch: ${BRANCH_NAME}"
+      - echo "AWS_REGION: ${AWS_REGION}"
+      - echo "AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}"
+      - |
+      for service in deployment/*/
         do 
           if [ -d "${service}/${BRANCH_NAME}/" ]; then
             #get list of non-hidden directories within ${service}/${BRANCH_NAME}/

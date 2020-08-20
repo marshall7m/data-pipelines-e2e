@@ -1,6 +1,7 @@
 provider "aws" {
-  profile = "default"
   region  = "us-west-2"
+  #source aws region from codebuild env?
+  # region = var.AWS_REGION
 }
   
 module "vpc" {
@@ -17,12 +18,7 @@ module "vpc" {
   public_subnet_suffix = "public"
   private_subnet_suffix = "private"
 
-  #nat gateway
-  enable_nat_gateway = true
-  single_nat_gateway = true
-  one_nat_gateway_per_az = false
-  reuse_nat_ips = false
-
+  enable_nat_gateway = false
   enable_vpn_gateway = false
 
   create_database_subnet_route_table = false
@@ -56,8 +52,6 @@ module "vpc" {
     }
   ]
 
-  
-  
   public_inbound_acl_rules = [
     {
       "cidr_block": "0.0.0.0/0",
