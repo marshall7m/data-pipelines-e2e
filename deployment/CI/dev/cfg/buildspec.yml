@@ -5,6 +5,7 @@ phases:
     commands:
       - wget https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - unzip terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
+      - rm terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - mv terraform /usr/local/bin/
   build:
     commands:
@@ -17,6 +18,10 @@ phases:
           *) TF_COMMAND="plan";;
         esac
       - echo $BRANCH_NAME
+      - export AWS_ACCESS_KEY_ID=`curl --silent http://169.254.170.2:80$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI | jq -r '.AccessKeyId'`
+      - export AWS_SECRET_ACCESS_KEY=`curl --silent http://169.254.170.2:80$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI | jq -r '.SecretAccessKey'`
+      - export AWS_DEFAULT_REGION="us-west-2"
+      - pwd
       - |
         for service in deployment/*/; do
           if [ -d "${service}/${BRANCH_NAME}/" ]; then

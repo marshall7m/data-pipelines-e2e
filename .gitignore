@@ -1,0 +1,12 @@
+.terraform
+terraform.tfstate.backup
+terraform.tfstate
+.env
+#secret.auto.tfvars
+.DS_Store
+*.env
+secret*.*
+__pycache__
+unittests.cfg
+docker-compose.yml
+.vscode

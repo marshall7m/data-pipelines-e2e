@@ -1,8 +1,4 @@
-provider "aws" {
-  region  = "us-west-2"
-  #source aws region from codebuild env?
-  # region = var.AWS_REGION
-}
+provider "aws" {}
   
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
