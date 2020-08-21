@@ -17,9 +17,10 @@ phases:
           *) TF_COMMAND="plan";;
         esac
       - echo $BRANCH_NAME
-      - echo $AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
-      - export AWS_ACCESS_KEY_ID=`curl --silent http://169.254.170.2:80$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI | jq -r '.AccessKeyId'`
-      - echo $AWS_ACCESS_KEY_ID
+      - export AWS_ACCESS_KEY=`curl --silent http://169.254.170.2:80$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI | jq -r '.AccessKeyId'`
+      - export AWS_SECRET_KEY=`curl --silent http://169.254.170.2:80$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI | jq -r '.SecretAccessKey'`
+      - ls
+      - pwd
       - |
         for service in deployment/*/; do
           if [ -d "${service}/${BRANCH_NAME}/" ]; then
