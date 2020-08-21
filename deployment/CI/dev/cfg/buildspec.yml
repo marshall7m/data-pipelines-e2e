@@ -10,6 +10,9 @@ phases:
     commands:
       # - echo $CODEBUILD_WEBHOOK_EVENT
       - echo $CODEBUILD_WEBHOOK_TRIGGER
+      - echo $AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
+      - AWS_ACCESS_KEY_ID=`curl --silent http://169.254.170.2:80$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI | jq -r '.AccessKeyId'`
+      - echo $AWS_ACCESS_KEY_ID
       - BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
       - | 
         case $BRANCH_NAME in
