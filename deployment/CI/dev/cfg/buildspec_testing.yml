@@ -7,7 +7,7 @@ phases:
       # - unzip terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       # - rm terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       # - mv terraform /usr/local/bin/
-      - docker pull hashicorp/terraform:$TERRAFORM_VERSION
+      - docker pull hashicorp/terraform
   build:
     commands:
       - |
@@ -43,12 +43,12 @@ phases:
               echo "*************** terraform init ******************"
               echo "******* At directory: ${sub_dir} ********"
               echo "*************************************************"
-              docker run -i -t hashicorp/terraform:light init
+              docker run -i -t hashicorp/terraform:$TERRAFORM_VERSION init
               echo ""
               echo "*************** terraform plan ******************"
               echo "******* At directory: ${sub_dir} ********"
               echo "*************************************************"
-              docker run -i -t hashicorp/terraform:light plan
+              docker run -i -t hashicorp/terraform:$TERRAFORM_VERSION plan
               cd - > /dev/null 
             fi
           done 
