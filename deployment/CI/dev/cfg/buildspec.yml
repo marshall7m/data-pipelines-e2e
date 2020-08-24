@@ -7,12 +7,17 @@ phases:
       - unzip terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - rm terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       - mv terraform /usr/local/bin/
+      # - docker pull hashicorp/terraform
+      # -docker run -i -t hashicorp/terraform:light plan main.tf
   build:
     commands:
       # - echo $CODEBUILD_WEBHOOK_EVENT
       - echo $CODEBUILD_WEBHOOK_TRIGGER
-      - BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
-      - | 
+      - |
+        if [[ -z "${BRANCH_NAME}" ]]; then
+          BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
+        fi
+      - |
         case $BRANCH_NAME in
           dev|prod) TF_COMMAND="apply -auto-approve";; \
           *) TF_COMMAND="plan";;
@@ -21,8 +26,12 @@ phases:
       - export AWS_ACCESS_KEY_ID=`curl --silent http://169.254.170.2:80$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI | jq -r '.AccessKeyId'`
       - export AWS_SECRET_ACCESS_KEY=`curl --silent http://169.254.170.2:80$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI | jq -r '.SecretAccessKey'`
       - export AWS_DEFAULT_REGION="us-west-2"
-      - pwd
+      - docker ps 
+      - docker images
+      - echo $ECS_AWSVPC_BLOCK_IMDS
+      - echo $ECS_ENABLE_TASK_IAM_ROLE
       - |
+        if $BRANCH_NAME == 
         for service in deployment/*/; do
           if [ -d "${service}/${BRANCH_NAME}/" ]; then
             #get list of non-hidden directories within ${service}/${BRANCH_NAME}/
@@ -30,14 +39,14 @@ phases:
             for dir in $service_dir_list; do
               #if directory contains .tf or .tfvars files
               if (ls ${dir}/*.tf) > /dev/null 2>&1 || (ls ${dir}/*.tfvars) > /dev/null 2>&1; then
-                cd $dir > /dev/null
+                cd $dir 
                 echo ""
-                echo "*************** TERRAFORM INIT ******************"
+                echo "*************** terraform init ******************"
                 echo "******* At directory: ${dir} ********"
                 echo "*************************************************"
                 terraform init
                 echo ""
-                echo "*************** TERRAFORM $TF_COMMAND ******************"
+                echo "*************** terraform $TF_COMMAND ******************"
                 echo "******* At directory: ${dir} ********"
                 echo "*************************************************"
                 terraform $TF_COMMAND
@@ -51,4 +60,3 @@ phases:
             echo "No ${BRANCH_NAME} environment directory exists within ${dir}"
           fi
         done
-    
