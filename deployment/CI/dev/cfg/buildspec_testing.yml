@@ -8,6 +8,7 @@ phases:
       # - rm terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
       # - mv terraform /usr/local/bin/
       # - docker pull hashicorp/terraform
+      
   build:
     commands:
       - |
