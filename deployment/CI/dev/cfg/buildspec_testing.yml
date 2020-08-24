@@ -10,12 +10,12 @@ phases:
       - docker pull hashicorp/terraform:$TERRAFORM_VERSION
   build:
     commands:
-      : '
-      CodeBuild environment variables
-        BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
-        TF_ROOT_DIR -- Directory within branch ($BRANCH_NAME) that will be iterated through for terraform planning and testing
-      '
       - |
+        : '
+        CodeBuild environment variables:
+          BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
+          TF_ROOT_DIR -- Directory within branch ($BRANCH_NAME) that will be iterated through for terraform planning and testing
+        '
         # if BRANCH_NAME is not defined in codebuild 
         if [[ -z "${BRANCH_NAME}" ]]; then
           # extract branch from github webhook
