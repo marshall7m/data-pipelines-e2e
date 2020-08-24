@@ -11,7 +11,7 @@ phases:
   build:
     commands:
       : '
-      CodeBuild environment variables:
+      CodeBuild environment variables
         BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
         TF_ROOT_DIR -- Directory within branch ($BRANCH_NAME) that will be iterated through for terraform planning and testing
       '
