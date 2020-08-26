@@ -15,17 +15,20 @@ phases:
       # extract branch from github webhook
       # Iterate only through BRANCH_NAME directory
       # Iterate through both dev and prod directories
+
       - |
-        if [[ -z "${BRANCH_NAME}" ]]; then
+        if [ -z "${BRANCH_NAME}" ]; then
           BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
         fi
       - echo $BRANCH_NAME
+      - LIVE_BRANCHES=($LIVE_BRANCHES)
       - |
         if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
-          TF_ROOT_DIR=${TF_ROOT_DIR}/${BRANCH_NAME}/
+          TF_ROOT_DIR=${TF_ROOT_DIR}/*/${BRANCH_NAME}/
         else
           TF_ROOT_DIR=${TF_ROOT_DIR}/*/
         fi
+      - echo $TF_ROOT_DIR
       - |
         for dir in $TF_ROOT_DIR; do
           #get list of non-hidden directories within $dir/
@@ -48,5 +51,11 @@ phases:
             fi
           done 
         done
-      
-
+  finally:
+    command:
+      - |
+        #/bin/bash
+        if [[ -z "${BRANCH_NAME}" ]]; then
+          BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
+        fi
+      - echo $BRANCH_NAME
