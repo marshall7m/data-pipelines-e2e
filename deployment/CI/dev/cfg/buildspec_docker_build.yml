@@ -11,6 +11,8 @@ phases:
           # extract branch from github webhook
           BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
         fi
+        # replace BRANCH_NAME placeholder within IMAGE_TAG with actual BRANCH_NAME
+        IMAGE_TAG="${IMAGE_TAG/BRANCH_NAME/$BRANCH_NAME}"  
   build:
     commands:
       - echo Build started on `date`
