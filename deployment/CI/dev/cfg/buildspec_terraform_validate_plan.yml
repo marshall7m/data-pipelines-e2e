@@ -12,17 +12,18 @@ phases:
       # LIVE_BRANCHES -- Branches that represent a live cloud environment
       
       # if BRANCH_NAME is not defined in codebuild
+      # extract branch from github webhook
+      # Iterate only through BRANCH_NAME directory
+      # Iterate through both dev and prod directories
       - |
         if [[ -z "${BRANCH_NAME}" ]]; then
-          # extract branch from github webhook
           BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
         fi
-        echo $BRANCH_NAME
+      - echo $BRANCH_NAME
+      - |
         if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
-          # Iterate only through BRANCH_NAME directory
           TF_ROOT_DIR=${TF_ROOT_DIR}/${BRANCH_NAME}/
         else
-          # Iterate through both dev and prod directories
           TF_ROOT_DIR=${TF_ROOT_DIR}/*/
         fi
       - |
