@@ -21,7 +21,8 @@ phases:
           BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
         fi
       - echo $BRANCH_NAME
-      - LIVE_BRANCHES=($LIVE_BRANCHES)
+      # - LIVE_BRANCHES=($LIVE_BRANCHES)
+      - echo $LIVE_BRANCHES
       - |
         if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
           TF_ROOT_DIR=${TF_ROOT_DIR}/*/${BRANCH_NAME}/
@@ -51,10 +52,3 @@ phases:
             fi
           done 
         done
-    finally:
-        - |
-          #/bin/bash
-          if [[ -z "${BRANCH_NAME}" ]]; then
-            BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
-          fi
-        - echo $BRANCH_NAME
