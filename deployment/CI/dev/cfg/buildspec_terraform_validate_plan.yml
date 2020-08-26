@@ -6,13 +6,13 @@ phases:
       # install/incorporate terraform validator? 
   build:
     commands:
+      # CodeBuild environment variables
+      # BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
+      # TF_ROOT_DIR -- Directory within branch ($BRANCH_NAME) that will be iterated through for terraform planning and testing
+      # LIVE_BRANCHES -- Branches that represent a live cloud environment
+      
+      # if BRANCH_NAME is not defined in codebuild
       - |
-        # CodeBuild environment variables
-        # BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
-        # TF_ROOT_DIR -- Directory within branch ($BRANCH_NAME) that will be iterated through for terraform planning and testing
-        # LIVE_BRANCHES -- Branches that represent a live cloud environment
-        
-        # if BRANCH_NAME is not defined in codebuild 
         if [[ -z "${BRANCH_NAME}" ]]; then
           # extract branch from github webhook
           BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
