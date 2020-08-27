@@ -18,12 +18,12 @@ phases:
       # Iterate through both dev and prod directories
 
       - |
-        if [ -z "${BRANCH_NAME}" ]; then
+        if [[ -z "${BRANCH_NAME}" ]]; then
           BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
         fi
+      - echo $CODEBUILD_WEBHOOK_HEAD_REF
       - echo $BRANCH_NAME
-      # - LIVE_BRANCHES=($LIVE_BRANCHES)
-      - echo $LIVE_BRANCHES
+      - BRANCH_NAME=master
       - |
         if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
           TF_ROOT_DIR=${TF_ROOT_DIR}/*/${BRANCH_NAME}/
@@ -53,9 +53,3 @@ phases:
             fi
           done 
         done
-    finally:
-      - |
-        if [ -z "${BRANCH_NAME}" ]; then
-          BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
-        fi;
-      - echo $BRANCH_NAME
