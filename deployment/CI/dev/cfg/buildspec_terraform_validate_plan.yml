@@ -23,7 +23,6 @@ phases:
         fi
       - echo $CODEBUILD_WEBHOOK_HEAD_REF
       - echo $BRANCH_NAME
-      - BRANCH_NAME=master
       - |
         if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
           TF_ROOT_DIR=${TF_ROOT_DIR}/*/${BRANCH_NAME}/
