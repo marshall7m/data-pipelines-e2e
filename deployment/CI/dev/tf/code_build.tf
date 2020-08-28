@@ -7,17 +7,7 @@ resource "aws_codebuild_webhook" "tf_pr" {
   filter_group {
     filter {
       type    = "EVENT"
-      pattern = "PUSH"
-    }
-    
-    filter {
-      type    = "EVENT"
-      pattern = "PULL_REQUEST_CREATED"
-    }
-
-    filter {
-      type    = "EVENT"
-      pattern = "PULL_REQUEST_UPDATED"
+      pattern = "PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED"
     }
 
     filter {
