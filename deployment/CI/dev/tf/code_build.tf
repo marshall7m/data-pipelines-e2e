@@ -22,7 +22,7 @@ resource "aws_codebuild_webhook" "tf_pr" {
 
     filter {
       type = "FILE_PATH"
-      pattern = "^.*\\.(tf|tfvars)$"
+      pattern = "^.*[.](tf|tfvars)$"
     }
   }
 }
@@ -38,7 +38,7 @@ resource "aws_codebuild_webhook" "tf_merge" {
 
     filter {
       type = "FILE_PATH"
-      pattern = "^.*\\.(tf|tfvars)$"
+      pattern = "^.*[.](tf|tfvars)$"
     }
   }
 }
