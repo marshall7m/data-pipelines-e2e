@@ -1,5 +1,6 @@
 version: 0.2
-
+env:
+  shell: bash
 phases:
   install:
     commands:
@@ -10,7 +11,7 @@ phases:
       # BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
       # TF_ROOT_DIR -- Directory within branch ($BRANCH_NAME) that will be iterated through for terraform planning and testing
       # LIVE_BRANCHES -- Branches that represent a live cloud environment
-      
+
       - printenv
       - |
         if [[ -z "${BRANCH_NAME}" ]]; then
