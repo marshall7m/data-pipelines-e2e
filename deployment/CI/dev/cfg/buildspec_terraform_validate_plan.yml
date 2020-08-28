@@ -15,7 +15,7 @@ phases:
       # extract branch from github webhook
       # Iterate only through BRANCH_NAME directory
       # Iterate through both dev and prod directories
-
+      - printenv
       - |
         if [[ -z "${BRANCH_NAME}" ]]; then
           BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
