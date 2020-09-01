@@ -1,7 +1,5 @@
 provider "aws" {
-  region  = "us-west-2"
-  #source aws region from codebuild env?
-  # region = var.AWS_REGION
+region = "us-west-2"
 }
   
 module "vpc" {
