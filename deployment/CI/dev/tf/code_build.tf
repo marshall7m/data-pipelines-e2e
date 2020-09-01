@@ -25,6 +25,11 @@ resource "aws_codebuild_webhook" "tf_merge" {
       type    = "EVENT"
       pattern = "PULL_REQUEST_MERGED"
     }
+    
+    filter{
+      type = "BASE_REF"
+      pattern = "^refs\\/heads\\/(dev|prod)$"
+    }
 
     filter {
       type = "FILE_PATH"
@@ -33,13 +38,18 @@ resource "aws_codebuild_webhook" "tf_merge" {
   }
 }
 
-resource "aws_codebuild_webhook" "docker_build" {
-  project_name = aws_codebuild_project.docker_build.name
+resource "aws_codebuild_webhook" "airflow_batch_build" {
+  project_name = aws_codebuild_project.airflow_batch_build.name
 
   filter_group {
     filter {
       type    = "EVENT"
       pattern = "PULL_REQUEST_MERGED"
+    }
+
+    filter{
+      type = "BASE_REF"
+      pattern = "^refs\\/heads\\/(dev|prod)$"
     }
     
     filter {
@@ -217,9 +227,9 @@ resource "aws_codebuild_project" "tf_apply" {
   }
 }
 
-resource "aws_codebuild_project" "docker_build" {
-  name          = "docker_build"
-  description   = "Build Dockerfile from Github source and push to ECR"
+resource "aws_codebuild_project" "airflow_batch_build" {
+  name          = "airflow_batch_build"
+  description   = "Compiles Airflow from source, DAG dependencies and project DAGs into a Docker image and pushes the image to ECR"
   build_timeout = "5"
   service_role  = aws_iam_role.code_build.arn
 
@@ -227,9 +237,8 @@ resource "aws_codebuild_project" "docker_build" {
     type = "NO_ARTIFACTS"
   }
   cache {
-    type = "S3"
-    location = "${var.base_bucket}/CI/dev/docker_build/cache"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    type = "LOCAL"
+    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
   }
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
@@ -266,7 +275,7 @@ resource "aws_codebuild_project" "docker_build" {
     location        = var.github_repo_url
     git_clone_depth = 1
 
-    buildspec = "deployment/CI/dev/cfg/buildspec_docker_build.yml"
+    buildspec = "deployment/CI/dev/cfg/buildspec_airflow_batch.yml"
     git_submodules_config {
       fetch_submodules = false
     }

@@ -5,6 +5,10 @@ cd airflow
 
 git checkout v1-10-stable
 
+if [[-n $IMAGE_TAG]]; then
+    IMAGE_TAG="test_tag"
+fi
+
 docker build . \
     --tag $IMAGE_REPO_NAME:$IMAGE_TAG
     --build-arg AIRFLOW_INSTALL_VERSION="1.10.13"
