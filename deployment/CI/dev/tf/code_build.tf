@@ -41,10 +41,15 @@ resource "aws_codebuild_webhook" "docker_build" {
       type    = "EVENT"
       pattern = "PULL_REQUEST_MERGED"
     }
+    
+    filter {
+      type = "FILE_PATH"
+      pattern = "^deployment\\/data_pipeline\\/.+build\\.sh$"
+    }
 
     filter {
       type = "FILE_PATH"
-      pattern = "^Dockerfile$"
+      pattern = "^deployment\\/data_pipeline\\/.+Dockerfile$"
     }
   }
 }
@@ -221,7 +226,11 @@ resource "aws_codebuild_project" "docker_build" {
   artifacts {
     type = "NO_ARTIFACTS"
   }
-
+  cache {
+    type = "S3"
+    location = "${var.base_bucket}/CI/dev/docker_build/cache"
+    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+  }
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
     image                       = "aws/codebuild/standard:4.0"
@@ -241,14 +250,14 @@ resource "aws_codebuild_project" "docker_build" {
 
     environment_variable {
       name  = "IMAGE_TAG"
-      value = "BRANCH_NAME_latest"
+      value = "latest"
     }
   }
   
   logs_config {
     s3_logs {
       status   = "ENABLED"
-      location = "${var.base_bucket}/CI/dev/docker_build"
+      location = "${var.base_bucket}/CI/dev/docker_build/logs"
     }
   }
 
