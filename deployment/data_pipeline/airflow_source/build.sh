@@ -5,9 +5,7 @@ cd airflow
 
 git checkout v1-10-stable
 
-if [[-n $IMAGE_TAG]]; then
-    IMAGE_TAG="test_tag"
-fi
+docker images
 
 docker build . \
     --tag $IMAGE_REPO_NAME:$IMAGE_TAG

@@ -6,11 +6,12 @@ batch:
         compute-type: BUILD_GENERAL1_SMALL
         privileged-mode: true   
         variables:
-          BUILD_SH_PATH: "deployment/data_pipeline/dev/airflow_source/"
-          BUILD_SH: "build.sh"
+          BUILD_SH_PATH: deployment/data_pipeline/dev/airflow_source/
+          BUILD_SH: build.sh
           TAG_PREFIX: airflow-local
-          #test to see if buildspec variables will be formatted
+        exported-variables:
           test_IMAGE_TAG: airflow-local-${CODEBUILD_RESOLVED_SOURCE_VERSION}
+
     # - identifier: airflow_deps
     #   env:
     #     compute-type: BUILD_GENERAL1_SMALL
@@ -39,9 +40,12 @@ phases:
       - aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION
   build:
     commands:
+      - printenv
       - echo $test_IMAGE_TAG
       - IMAGE_TAG=${TAG_PREFIX}-${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - cd $BUILD_PATH
+      - ls
+      - pwd
       - bash $BUILD_SH
   post_build:
     commands:
