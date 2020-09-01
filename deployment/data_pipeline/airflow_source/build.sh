@@ -4,7 +4,6 @@ git clone https://github.com/apache/airflow.git
 cd airflow
 
 git checkout v1-10-stable
-
 docker images
 
 docker build . \
