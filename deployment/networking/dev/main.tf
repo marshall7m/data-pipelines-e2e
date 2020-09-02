@@ -1,7 +1,3 @@
-provider "aws" {
-region = "us-west-2"
-}
-  
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
   version = "2.44.0"

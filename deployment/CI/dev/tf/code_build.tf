@@ -1,6 +1,3 @@
-provider "aws" {
-  region  = "us-west-2"
-}
 resource "aws_codebuild_webhook" "tf_pr" {
   project_name = aws_codebuild_project.tf_validate_plan.name
 
@@ -48,7 +45,7 @@ resource "aws_codebuild_webhook" "airflow_batch_build" {
     }
 
     filter{
-      type = "BASE_REF"
+      type = "HEAD_REF"
       pattern = "^refs\\/heads\\/(dev|prod)$"
     }
     
@@ -238,7 +235,7 @@ resource "aws_codebuild_project" "airflow_batch_build" {
   }
   cache {
     type = "LOCAL"
-    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
   }
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"

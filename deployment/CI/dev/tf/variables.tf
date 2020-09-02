@@ -1,3 +1,6 @@
+variable "AWS_ACCESS_KEY_ID" {}
+variable "AWS_SECRET_ACCESS_KEY_ID" {}
+
 variable "github_repo" {
     default = "sparkify_end_to_end"
 }
