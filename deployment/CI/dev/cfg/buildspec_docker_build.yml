@@ -4,7 +4,7 @@ phases:
     pre_build:
       commands:
         - echo Logging into Amazon ECR...
-        - aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION
+        - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
     build:
       commands:
         - export IMAGE_TAG=airflow_dags-${CODEBUILD_RESOLVED_SOURCE_VERSION}
