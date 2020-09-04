@@ -8,8 +8,8 @@ phases:
     build:
       commands:
         - export IMAGE_TAG=${TAG_PREFIX}-${CODEBUILD_RESOLVED_SOURCE_VERSION}
-        - cd $BUILD_PATH
-        - bash $BUILD_SH
+        - cd deployment/data_pipeline/dev/src/
+        - bash build.sh
     post_build:
       commands:
         - echo Build completed on `date`
