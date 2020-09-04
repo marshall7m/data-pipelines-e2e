@@ -9,29 +9,26 @@ batch:
           BUILD_SH_PATH: deployment/data_pipeline/dev/airflow_source/
           BUILD_SH: build.sh
           TAG_PREFIX: airflow-local
-        exported-variables:
-          test_IMAGE_TAG: airflow-local-${CODEBUILD_RESOLVED_SOURCE_VERSION}
-
-    # - identifier: airflow_deps
-    #   env:
-    #     compute-type: BUILD_GENERAL1_SMALL
-    #     privileged-mode: true
-    #     variables:
-    #       BUILD_PATH: "deployment/data_pipeline/dev/src/airflow_base_deps/" 
-    #       BUILD_SH: "build.sh"
-    #       TAG_PREFIX: airflow-local-deps
-    #   depend-on:
-    #     - airflow_source
-    # - identifier: airflow_dags
-    #   env:
-    #     compute-type: BUILD_GENERAL1_SMALL
-    #     privileged-mode: true
-    #     variables:
-    #       BUILD_PATH: "deployment/data_pipeline/dev/src/" 
-    #       BUILD_SH: "build.sh"
-    #       TAG_PREFIX: airflow-local-dags
-    #   depend-on:
-    #     - airflow_deps
+    - identifier: airflow_deps
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        privileged-mode: true
+        variables:
+          BUILD_PATH: "deployment/data_pipeline/dev/src/airflow_base_deps/" 
+          BUILD_SH: "build.sh"
+          TAG_PREFIX: airflow-deps
+      depend-on:
+        - airflow_source
+    - identifier: airflow_dags
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        privileged-mode: true
+        variables:
+          BUILD_PATH: "deployment/data_pipeline/dev/src/" 
+          BUILD_SH: "build.sh"
+          TAG_PREFIX: airflow-dags
+      depend-on:
+        - airflow_deps
 
 phases:
   pre_build:
@@ -40,16 +37,11 @@ phases:
       - aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION
   build:
     commands:
-      - printenv
-      - echo $test_IMAGE_TAG
-      - IMAGE_TAG=${TAG_PREFIX}-${CODEBUILD_RESOLVED_SOURCE_VERSION}
+      - export IMAGE_TAG=${TAG_PREFIX}-${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - cd $BUILD_PATH
-      - ls
-      - pwd
       - bash $BUILD_SH
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $IMAGE_REPO_NAME:$IMAGE_TAG
-      # - cd - > /dev/null 

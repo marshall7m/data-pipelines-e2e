@@ -115,7 +115,46 @@ resource "aws_iam_role_policy" "code_build_policy" {
           "codebuild:CreateReport",
           "codebuild:UpdateReport",
           "codebuild:BatchPutTestCases",
-          "codebuild:BatchPutCodeCoverages"
+          "codebuild:BatchPutCodeCoverages",
+          "codebuild:BatchGetProjects"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": "ssm:GetParameters"
+    },
+    {
+      "Effect": "Allow",
+      "Resource": ${aws_iam_role.code_build.arn},
+      "Action": [
+          "iam:GetRole",
+          "iam:GetRolePolicy",
+          "iam:AddRoleToInstanceProfile",
+          "iam:AttachRolePolicy",
+          "iam:CreateInstanceProfile",
+          "iam:CreatePolicy",
+          "iam:CreateRole",
+          "iam:ListAttachedRolePolicies",
+          "iam:ListPolicies",
+          "iam:ListRoles",
+          "iam:PassRole",
+          "iam:PutRolePolicy",
+          "iam:UpdateAssumeRolePolicy"
+      ]
+    },
+    {
+      "Resource": "*",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:CompleteLayerUpload",
+        "ecr:GetAuthorizationToken",
+        "ecr:InitiateLayerUpload",
+        "ecr:PutImage",
+        "ecr:UploadLayerPart",
+        "ecr:DescribeRepositories",
+        "ecr:ListTagsForResource"
       ]
     }
   ]
@@ -273,6 +312,58 @@ resource "aws_codebuild_project" "airflow_batch_build" {
     git_clone_depth = 1
 
     buildspec = "deployment/CI/dev/cfg/buildspec_airflow_batch.yml"
+    git_submodules_config {
+      fetch_submodules = false
+    }
+  }
+
+  tags = {
+        Environment = "dev"
+        Terraform = "true"
+        Service = "CI"
+        Version = "0.0.1"
+  }
+}
+
+resource "aws_codebuild_project" "airflow_docker_build" {
+  name          = "airflow_docker_build"
+  description   = "Compiles DAG dependencies and project DAGs into a Docker image and pushes the image to ECR"
+  build_timeout = "5"
+  service_role  = aws_iam_role.code_build.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+  cache {
+    type = "LOCAL"
+    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+  }
+  environment {
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "aws/codebuild/standard:4.0"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
+    privileged_mode = true
+
+    environment_variable {
+      name  = "ECR_REPO_URL"
+      value = aws_ecr_repository.main.repository_url
+    }
+  }
+  
+  logs_config {
+    s3_logs {
+      status   = "ENABLED"
+      location = "${var.base_bucket}/CI/dev/docker_build/logs"
+    }
+  }
+
+  source {
+    type            = "GITHUB"
+    location        = var.github_repo_url
+    git_clone_depth = 1
+
+    buildspec = "deployment/CI/dev/cfg/buildspec_docker_build.yml"
     git_submodules_config {
       fetch_submodules = false
     }

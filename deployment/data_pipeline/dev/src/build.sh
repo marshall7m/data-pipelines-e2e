@@ -1,7 +1,9 @@
 docker build . \
-    --tag $IMAGE_REPO_NAME:$IMAGE_TAG
-    --build-arg DAGS_FOLDER="dags/"
-    --build-arg PLUGINS_FOLDER="plugins/"
-    # --build-arg AIRFLOW_CONFIG="airflow.cfg"
+    --tag $ECR_REPO_URL:$IMAGE_TAG \
+    --build-arg AIRFLOW_IMG_TAG="1.10.11"
+    --build-arg DAGS_FOLDER="dags/" \
+    --build-arg PLUGINS_FOLDER="plugins/" \
+    --build-arg CONFIG_FOLDER="cfg/" \
+    --build-arg REQUIREMENTS_TXT="requirements.txt" \
+    --build-arg AIRFLOW_CONSTRAINTS_URL="https://raw.githubusercontent.com/apache/airflow/constraints-1.10.11/constraints-3.6.txt"
 
-docker push $IMAGE_REPO_NAME:$IMAGE_TAG

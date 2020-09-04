@@ -1,27 +1,34 @@
-FROM sparkify:airflow-local-deps
+ARG AIRFLOW_IMG_TAG="latest"
+FROM apache/airflow:$AIRFLOW_IMG_TAG
 
-ARG DAGS_FOLDER
-ENV DAGS_FOLDER=${DAGS_FOLDER}
-
-COPY --chown=airflow:root dags/ $AIRFLOW_HOME/dags/
-
-ARG PLUGINS_FOLDER
-ENV PLUGINS_FOLDER=${PLUGINS_FOLDER}
-
-COPY plugins/ $AIRFLOW_HOME/plugins/
-
-# ARG AIRFLOW_CONFIG
-# ENV AIRFLOW_CONFIG=${AIRFLOW_CONFIG}
-
-# COPY $AIRFLOW_CONFIG $AIRFLOW_HOME/cfg/airflow.cfg
+USER airflow
+WORKDIR $AIRFLOW_HOME
 
 ARG REQUIREMENTS_TXT=""
 ENV REQUIREMENTS_TXT=${REQUIREMENTS_TXT}
 
+COPY --chown=airflow $REQUIREMENTS_TXT $REQUIREMENTS_TXT
+
 ARG AIRFLOW_CONSTRAINTS_URL=""
 ENV AIRFLOW_CONSTRAINTS_URL=${AIRFLOW_CONSTRAINTS_URL}
 
-RUN if [ -n "${REQUIREMENTS_TXT}" ]; then pip install --user --upgrade pip && \
-    pip install --user ${REQUIREMENTS_TXT} \
-    --constraint "${AIRFLOW_CONSTRAINTS_URL} "; fi
+RUN if [ ! -z "${REQUIREMENTS_TXT}" ]; then pip install --user --upgrade pip && \
+    pip install --user -r "${REQUIREMENTS_TXT}" \
+    --constraint "${AIRFLOW_CONSTRAINTS_URL}"; fi
+
+ARG DAGS_FOLDER="dags/"
+ENV DAGS_FOLDER=${DAGS_FOLDER}
+
+COPY --chown=airflow dags/ $AIRFLOW_HOME/dags/
+
+ARG PLUGINS_FOLDER="plugins/"
+ENV PLUGINS_FOLDER=${PLUGINS_FOLDER}
+
+COPY --chown=airflow plugins/ $AIRFLOW_HOME/plugins/
+
+ARG CONFIG_FOLDER="cfg/"
+ENV CONFIG_FOLDER=${CONFIG_FOLDER}
+
+COPY --chown=airflow cfg/ $AIRFLOW_HOME/cfg/
+
 
