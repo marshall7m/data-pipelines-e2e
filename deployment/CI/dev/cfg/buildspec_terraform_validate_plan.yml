@@ -3,8 +3,8 @@ env:
   # shell: bash
   shell: /bin/sh
   parameter-store:
-      AWS_ACCESS_KEY_ID_PARAM: AWS_ACCESS_KEY_ID
-      AWS_SECRET_ACCESS_KEY_PARAM: AWS_SECRET_ACCESS_KEY
+      AWS_ACCESS_KEY_ID_PARAM: TF_AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY_PARAM: TF_AWS_SECRET_ACCESS_KEY_ID
 phases:
   install:
     commands:
