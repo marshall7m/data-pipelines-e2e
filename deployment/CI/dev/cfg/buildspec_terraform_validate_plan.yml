@@ -17,6 +17,7 @@ phases:
       #   LIVE_BRANCHES -- Branches that represent a live cloud environment
       - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_PARAM
       - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_PARAM
+      - bash -version || echo "${BASH_VERSION}" || bash --version
       - |
         if [[ -z "${BRANCH_NAME}" ]]; then
           # extract branch from github webhook
@@ -24,7 +25,6 @@ phases:
         fi
       - "echo Triggered Branch: $BRANCH_NAME"
       - |
-        #!/bin/bash
         if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
           # Iterate only through BRANCH_NAME directory
           TF_ROOT_DIR=${TF_ROOT_DIR}/*/${BRANCH_NAME}/
