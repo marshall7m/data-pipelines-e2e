@@ -24,6 +24,7 @@ phases:
         fi
       - "echo Triggered Branch: $BRANCH_NAME"
       - |
+        #!/bin/bash
         if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
           # Iterate only through BRANCH_NAME directory
           TF_ROOT_DIR=${TF_ROOT_DIR}/*/${BRANCH_NAME}/
