@@ -35,8 +35,8 @@ resource "aws_codebuild_webhook" "tf_merge" {
   }
 }
 
-resource "aws_codebuild_webhook" "airflow_batch_build" {
-  project_name = aws_codebuild_project.airflow_batch_build.name
+resource "aws_codebuild_webhook" "airflow_docker_build" {
+  project_name = aws_codebuild_project.airflow_docker_build.name
 
   filter_group {
     filter {
@@ -101,7 +101,6 @@ resource "aws_iam_role_policy" "code_build_policy" {
       "Effect": "Allow",
       "Action": [
         "s3:*"
-        
       ],
       "Resource": [
         "arn:aws:s3:::${var.base_bucket}*"
@@ -126,7 +125,7 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": ${aws_iam_role.code_build.arn},
+      "Resource": "*",
       "Action": [
           "iam:GetRole",
           "iam:GetRolePolicy",

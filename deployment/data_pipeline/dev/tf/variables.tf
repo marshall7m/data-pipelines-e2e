@@ -5,14 +5,9 @@
 # variable "subnet_ids"{
 #     type = list
 # }
-# variable "aws_access_key" {}
-# variable "aws_secret_key" {}
-
 # variable "postgres_password" {}
 
 # variable "host_volumes_path" {}
-variable "AWS_ACCESS_KEY_ID" {}
-variable "AWS_SECRET_ACCESS_KEY_ID" {}
 
 variable "service" {
     default = "data_pipeline"
