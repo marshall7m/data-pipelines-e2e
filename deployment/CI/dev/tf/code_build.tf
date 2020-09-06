@@ -8,7 +8,7 @@ resource "aws_codebuild_webhook" "tf_pr" {
     }
 
     filter {
-      type = "FILE_PATH"
+      type    = "FILE_PATH"
       pattern = "^.*[.](tf|tfvars)$"
     }
   }
@@ -22,14 +22,14 @@ resource "aws_codebuild_webhook" "tf_merge" {
       type    = "EVENT"
       pattern = "PULL_REQUEST_MERGED"
     }
-    
-    filter{
-      type = "BASE_REF"
+
+    filter {
+      type    = "BASE_REF"
       pattern = "^refs\\/heads\\/(dev|prod)$"
     }
 
     filter {
-      type = "FILE_PATH"
+      type    = "FILE_PATH"
       pattern = "^.*[.](tf|tfvars)$"
     }
   }
@@ -44,18 +44,18 @@ resource "aws_codebuild_webhook" "airflow_docker_build" {
       pattern = "PULL_REQUEST_MERGED"
     }
 
-    filter{
-      type = "HEAD_REF"
+    filter {
+      type    = "HEAD_REF"
       pattern = "^refs\\/heads\\/(dev|prod)$"
     }
-    
+
     filter {
-      type = "FILE_PATH"
+      type    = "FILE_PATH"
       pattern = "^deployment\\/data_pipeline\\/.+build\\.sh$"
     }
 
     filter {
-      type = "FILE_PATH"
+      type    = "FILE_PATH"
       pattern = "^deployment\\/data_pipeline\\/.+Dockerfile$"
     }
   }
@@ -81,8 +81,8 @@ EOF
 }
 
 resource "aws_iam_role_policy" "code_build_policy" {
-  role = aws_iam_role.code_build.name
-  name = "SparkifyAWSCodeBuildServicePolicy"
+  role   = aws_iam_role.code_build.name
+  name   = "SparkifyAWSCodeBuildServicePolicy"
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -173,7 +173,7 @@ resource "aws_codebuild_project" "tf_validate_plan" {
 
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "hashicorp/terraform:0.12.28"
+    image                       = "aws/codebuild/standard:4.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
 
@@ -185,6 +185,11 @@ resource "aws_codebuild_project" "tf_validate_plan" {
     environment_variable {
       name  = "LIVE_BRANCHES"
       value = "(dev, prod)"
+    }
+
+    environment_variable {
+      name  = "TERRAFORM_VERSION"
+      value = "0.12.28"
     }
   }
 
@@ -208,9 +213,9 @@ resource "aws_codebuild_project" "tf_validate_plan" {
 
   tags = {
     Environment = "dev"
-    Terraform = "true"
-    Service = "CI"
-    Version = "0.0.1"
+    Terraform   = "true"
+    Service     = "CI"
+    Version     = "0.0.1"
   }
 }
 
@@ -226,7 +231,7 @@ resource "aws_codebuild_project" "tf_apply" {
 
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "hashicorp/terraform:0.12.28"
+    image                       = "aws/codebuild/standard:4.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
 
@@ -234,8 +239,13 @@ resource "aws_codebuild_project" "tf_apply" {
       name  = "LIVE_BRANCHES"
       value = "(dev, prod)"
     }
+
+    environment_variable {
+      name  = "TERRAFORM_VERSION"
+      value = "0.12.28"
+    }
   }
-  
+
   logs_config {
     s3_logs {
       status   = "ENABLED"
@@ -255,10 +265,10 @@ resource "aws_codebuild_project" "tf_apply" {
   }
 
   tags = {
-        Environment = "dev"
-        Terraform = "true"
-        Service = "CI"
-        Version = "0.0.1"
+    Environment = "dev"
+    Terraform   = "true"
+    Service     = "CI"
+    Version     = "0.0.1"
   }
 }
 
@@ -272,7 +282,7 @@ resource "aws_codebuild_project" "airflow_batch_build" {
     type = "NO_ARTIFACTS"
   }
   cache {
-    type = "LOCAL"
+    type  = "LOCAL"
     modes = ["LOCAL_DOCKER_LAYER_CACHE"]
   }
   environment {
@@ -280,7 +290,7 @@ resource "aws_codebuild_project" "airflow_batch_build" {
     image                       = "aws/codebuild/standard:4.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
-    privileged_mode = true
+    privileged_mode             = true
 
     environment_variable {
       name  = "ECR_REPO_URL"
@@ -297,7 +307,7 @@ resource "aws_codebuild_project" "airflow_batch_build" {
       value = "latest"
     }
   }
-  
+
   logs_config {
     s3_logs {
       status   = "ENABLED"
@@ -317,10 +327,10 @@ resource "aws_codebuild_project" "airflow_batch_build" {
   }
 
   tags = {
-        Environment = "dev"
-        Terraform = "true"
-        Service = "CI"
-        Version = "0.0.1"
+    Environment = "dev"
+    Terraform   = "true"
+    Service     = "CI"
+    Version     = "0.0.1"
   }
 }
 
@@ -334,7 +344,7 @@ resource "aws_codebuild_project" "airflow_docker_build" {
     type = "NO_ARTIFACTS"
   }
   cache {
-    type = "LOCAL"
+    type  = "LOCAL"
     modes = ["LOCAL_DOCKER_LAYER_CACHE"]
   }
   environment {
@@ -342,14 +352,14 @@ resource "aws_codebuild_project" "airflow_docker_build" {
     image                       = "aws/codebuild/standard:4.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
-    privileged_mode = true
+    privileged_mode             = true
 
     environment_variable {
       name  = "ECR_REPO_URL"
       value = aws_ecr_repository.main.repository_url
     }
   }
-  
+
   logs_config {
     s3_logs {
       status   = "ENABLED"
@@ -369,9 +379,9 @@ resource "aws_codebuild_project" "airflow_docker_build" {
   }
 
   tags = {
-        Environment = "dev"
-        Terraform = "true"
-        Service = "CI"
-        Version = "0.0.1"
+    Environment = "dev"
+    Terraform   = "true"
+    Service     = "CI"
+    Version     = "0.0.1"
   }
 }

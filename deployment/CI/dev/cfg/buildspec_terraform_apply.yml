@@ -1,48 +1,52 @@
 version: 0.2
 
 phases:
+  install:
+    commands:
+      - docker pull hashicorp/terraform:$TERRAFORM_VERSION
+  pre_build:
+    commands:
+      # CodeBuild environment variables:
+      #   BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
+      #   TF_ROOT_DIR -- Directory within branch ($BRANCH_NAME) that will be iterated through for terraform planning and testing
+      #   LIVE_BRANCHES -- Branches that represent a live cloud environment
+      - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_PARAM
+      - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_PARAM
+      - |
+        if [[ -z "${BRANCH_NAME}" ]]; then
+          # extract branch from github webhook
+          BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
+        fi
+      - "echo Triggered Branch: $BRANCH_NAME "
+      - |
+        if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
+          # Iterate only through BRANCH_NAME directory
+          TF_ROOT_DIR=${TF_ROOT_DIR}/*/${BRANCH_NAME}/
+        else
+          # Iterate through both dev and prod directories
+          TF_ROOT_DIR=${TF_ROOT_DIR}/*/
+        fi
+      - "echo Terraform root directory: $TF_ROOT_DIR"
   build:
     commands:
       - |
-        : '
-        CodeBuild environment variables:
-          BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
-          TF_ROOT_DIR -- Directory within branch ($BRANCH_NAME) that will be iterated through for terraform planning and testing
-          LIVE_BRANCHES -- Branches that represent a live cloud environment
-        '
-
-        # if BRANCH_NAME is not defined in codebuild 
-        if [[ -z "${BRANCH_NAME}" ]]; then
-          echo "Extracting $BRANCH_NAME from github webhook"
-          BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
-        fi
-        
-        if [[ -z "${TF_ROOT_DIR}" ]]; then
-          if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
-            # Iterate only through BRANCH_NAME directory
-            TF_ROOT_DIR=${TF_ROOT_DIR}/${BRANCH_NAME}/
-          else
-            # Iterate through both dev and prod directories
-            TF_ROOT_DIR=${TF_ROOT_DIR}/*/
-          fi
-        fi
-
-        echo "Triggered Branch: $BRANCH_NAME" 
-        echo "Terraform root directory: $TF_ROOT_DIR"
-
-      - |
         for dir in $TF_ROOT_DIR; do
-          #get list of non-hidden directories within $dir/
-          service_dir_list=$(find "${dir}" -type d | grep -v '/\.')
+        #get list of non-hidden directories within $dir/
+        service_dir_list=$(find "${dir}" -type d | grep -v '/\.')
           for sub_dir in $service_dir_list; do
             #if $sub_dir contains .tf or .tfvars files
             if (ls ${sub_dir}/*.tf) > /dev/null 2>&1 || (ls ${sub_dir}/*.tfvars) > /dev/null 2>&1; then
               cd $sub_dir 
               echo ""
-              echo "*************** terraform apply ******************"
+              echo "*************** terraform init ******************"
               echo "******* At directory: ${sub_dir} ********"
               echo "*************************************************"
-              terraform plan
+              docker run -it hashicorp/terraform:$TERRAFORM_VERSION init
+              echo ""
+              echo "*************** terraform plan ******************"
+              echo "******* At directory: ${sub_dir} ********"
+              echo "*************************************************"
+              docker run -it hashicorp/terraform:$TERRAFORM_VERSION apply -auto-approve
               cd - > /dev/null 
             fi
           done 

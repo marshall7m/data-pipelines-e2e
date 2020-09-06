@@ -7,6 +7,7 @@ env:
 phases:
   install:
     commands:
+      - docker pull hashicorp/terraform:$TERRAFORM_VERSION
       # install/incorporate terraform validator? 
   pre_build:
     commands:
@@ -16,7 +17,6 @@ phases:
       #   LIVE_BRANCHES -- Branches that represent a live cloud environment
       - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_PARAM
       - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_PARAM
-      - bash -version || echo "${BASH_VERSION}" || bash --version
       - |
         if [[ -z "${BRANCH_NAME}" ]]; then
           # extract branch from github webhook
@@ -46,13 +46,13 @@ phases:
               echo "*************** terraform init ******************"
               echo "******* At directory: ${sub_dir} ********"
               echo "*************************************************"
-              terraform init
+              docker run -it hashicorp/terraform:$TERRAFORM_VERSION init
               echo ""
               echo "*************** terraform plan ******************"
               echo "******* At directory: ${sub_dir} ********"
               echo "*************************************************"
-              terraform plan
+              docker run -it hashicorp/terraform:$TERRAFORM_VERSION plan
               cd - > /dev/null 
             fi
-          done 
+          done  
         done
