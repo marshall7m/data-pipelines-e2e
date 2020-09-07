@@ -8,7 +8,7 @@ phases:
   install:
     commands:
       - curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip --output terraform
-      - mv terraform $HOME/usr/local/bin/terraform
+      - mv terraform ~/usr/local/bin/terraform
       # install/incorporate terraform validator? 
   pre_build:
     commands:
