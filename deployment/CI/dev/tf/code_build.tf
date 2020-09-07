@@ -176,6 +176,7 @@ resource "aws_codebuild_project" "tf_validate_plan" {
     image                       = "aws/codebuild/standard:4.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
+    privileged_mode             = true
 
     environment_variable {
       name  = "TF_ROOT_DIR"
@@ -190,6 +191,16 @@ resource "aws_codebuild_project" "tf_validate_plan" {
     environment_variable {
       name  = "TERRAFORM_VERSION"
       value = "0.12.28"
+    }
+
+    environment_variable {
+      name  = "TF_IN_AUTOMATION"
+      value = "true"
+    }
+
+    environment_variable {
+      name  = "TF_CLI_ARGS"
+      value = "-input=false"
     }
   }
 
@@ -234,6 +245,7 @@ resource "aws_codebuild_project" "tf_apply" {
     image                       = "aws/codebuild/standard:4.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
+    privileged_mode             = true
 
     environment_variable {
       name  = "LIVE_BRANCHES"

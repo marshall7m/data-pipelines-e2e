@@ -2,12 +2,12 @@ version: 0.2
 env:
   shell: bash
   parameter-store:
-      AWS_ACCESS_KEY_ID_PARAM: TF_AWS_ACCESS_KEY_ID
-      AWS_SECRET_ACCESS_KEY_PARAM: TF_AWS_SECRET_ACCESS_KEY_ID
+    TF_AWS_ACCESS_KEY_ID: TF_AWS_ACCESS_KEY_ID
+    TF_AWS_SECRET_ACCESS_KEY: TF_AWS_SECRET_ACCESS_KEY
 phases:
   install:
     commands:
-      - wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+      - wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -q
       - unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip && mv terraform /usr/local/bin/
       # install/incorporate terraform validator? 
   pre_build:
@@ -16,8 +16,6 @@ phases:
       #   BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
       #   TF_ROOT_DIR -- Directory within branch ($BRANCH_NAME) that will be iterated through for terraform planning and testing
       #   LIVE_BRANCHES -- Branches that represent a live cloud environment
-      - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_PARAM
-      - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_PARAM
       - |
         if [[ -z "${BRANCH_NAME}" ]]; then
           # extract branch from github webhook
