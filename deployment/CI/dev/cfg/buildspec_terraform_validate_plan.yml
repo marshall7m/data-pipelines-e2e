@@ -7,7 +7,8 @@ env:
 phases:
   install:
     commands:
-      - docker pull hashicorp/terraform:$TERRAFORM_VERSION
+      - curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip --output terraform
+      - mv terraform $HOME/usr/local/bin/terraform
       # install/incorporate terraform validator? 
   pre_build:
     commands:
@@ -46,12 +47,12 @@ phases:
               echo "*************** terraform init ******************"
               echo "******* At directory: ${sub_dir} ********"
               echo "*************************************************"
-              docker run -it hashicorp/terraform:$TERRAFORM_VERSION init
+              terraform init
               echo ""
               echo "*************** terraform plan ******************"
               echo "******* At directory: ${sub_dir} ********"
               echo "*************************************************"
-              docker run -it hashicorp/terraform:$TERRAFORM_VERSION plan
+              terraform plan
               cd - > /dev/null 
             fi
           done  
