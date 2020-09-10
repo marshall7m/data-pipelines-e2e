@@ -1,7 +1,7 @@
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
   version = "2.44.0"
-  name = "dev-vpc" 
+  name = "${var.project_id}-dev-vpc" 
   cidr = "10.0.0.0/24"
 
   azs = ["us-west-2a", "us-west-2b"]
@@ -70,7 +70,8 @@ module "vpc" {
   
   
   tags = {
-        Environment = "dev"
+        project_id = var.project_id
+        Environment = var.env
         Terraform = "true"
         Service = "networking"
         Version = "0.0.1"

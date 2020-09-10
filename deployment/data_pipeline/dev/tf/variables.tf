@@ -70,9 +70,6 @@ variable "airflow_backend_db" {
 #     default = "/usr/local/airflow/plugins"
 # }
 
-variable "AWS_ACCESS_KEY_ID" {}
-variable "AWS_SECRET_ACCESS_KEY" {}
-
 variable "load_examples" {
     default = "false"
 }
@@ -84,9 +81,6 @@ variable "AIRFLOW_HOME" {
     default = "opt/airflow"
 }
 
-variable "service" {
-    default = "data_pipeline"
-}
 
 # variable "s3_buckets_dict" {}
 # variable "athena_queries_dict" {}

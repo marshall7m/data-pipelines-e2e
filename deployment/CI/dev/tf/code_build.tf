@@ -98,33 +98,22 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": "*",
-      "Action": [
-        "s3:PutObject",
-        "s3:GetBucketAcl",
-        "s3:GetBucketLocation"
-      ]
+      "Resource": "${local.resource_prefix}*",
+      "Action": "s3:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "*",
-      "Action": [
-        "codebuild:CreateReportGroup",
-        "codebuild:CreateReport",
-        "codebuild:UpdateReport",
-        "codebuild:BatchPutTestCases",
-        "codebuild:BatchPutCodeCoverages",
-        "codebuild:BatchGetProjects"
-      ]
+      "Resource": "${local.resource_prefix}*",
+      "Action": "codebuild:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "*",
+      "Resource": "${local.resource_prefix}*",
       "Action": "ssm:GetParameters"
     },
     {
       "Effect": "Allow",
-      "Resource": "*",
+      "Resource": "${local.resource_prefix}*",
       "Action": [
           "iam:GetRole",
           "iam:GetRolePolicy",
@@ -143,22 +132,22 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": "*",
+      "Resource": "${local.resource_prefix}*",
       "Action": "ecr:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "*",
+      "Resource": "${local.resource_prefix}*",
       "Action": "glue:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "*",
+      "Resource": "${local.resource_prefix}*",
       "Action": "athena:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "*",
+      "Resource": "${local.resource_prefix}*",
       "Action": "ec2:*"
     }
   ]
