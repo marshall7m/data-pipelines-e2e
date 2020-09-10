@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "sparkify-dend-analytics"
-    key    = "CI/dev/tf_state/terraform.tfstate"
+    bucket = "private-sparkify"
+    key    = "usr_olap/CI/dev/tf_state/terraform.tfstate"
     region = "us-west-2"
   }
 }

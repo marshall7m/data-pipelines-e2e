@@ -1,5 +1,5 @@
 resource "aws_ecr_repository" "main" {
-  name                 = "sparkify"
+  name                 = "${var.client}/${var.project_id}"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
