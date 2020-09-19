@@ -1,7 +1,7 @@
-resource "aws_glue_crawler" "crawlers" {
+resource "aws_glue_crawler" "this" {
     for_each = {for crawler in var.glue_crawlers:  crawler.name => crawler}
     name = each.key
-    role = aws_iam_role.glue.arn
+    role = var.glue_role_arn != null ? var.glue_role_arn : aws_iam_role.glue[0].arn
     database_name = "each.value.data_catalog"
 
     s3_target {

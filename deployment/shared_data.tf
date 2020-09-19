@@ -22,8 +22,8 @@ variable "env" {
 data "terraform_remote_state" "networking" {
   backend = "s3"
   config = {
-    bucket  = "private-sparkify"
-    key  = "${local.project_id}/networking/${var.env}/tf-state/terraform.tfstate"
+    bucket = "private-sparkify"
+    key    = "${local.project_id}/networking/${var.env}/tf-state/terraform.tfstate"
     region = "us-west-2"
   }
 }

@@ -5,7 +5,7 @@ resource "aws_athena_database" "databases" {
 }
 
 resource "aws_athena_workgroup" "workgroups" {
-  for_each = {for workgroup in var.athena_workgroups: workgroup.name => workgroup}
+  for_each = {for workgroup in var.athena_workgroups: "workgroup.name" => workgroup}
   name = each.key
 
   configuration {
