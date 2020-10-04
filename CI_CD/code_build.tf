@@ -243,7 +243,7 @@ resource "aws_codebuild_project" "tf_validate_plan" {
   logs_config {
     s3_logs {
       status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/CI/dev/terraform_validate_plan"
+      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/terraform_validate_plan"
     }
   }
 
@@ -256,7 +256,7 @@ resource "aws_codebuild_project" "tf_validate_plan" {
     #   type = "OAUTH"
     # }
 
-    buildspec = "deployment/CI/dev/cfg/buildspec_terraform_validate_plan.yml"
+    buildspec = "CI_CD/cfg/buildspec_terraform_validate_plan.yml"
     git_submodules_config {
       fetch_submodules = false
     }
@@ -318,7 +318,7 @@ resource "aws_codebuild_project" "tf_apply" {
   logs_config {
     s3_logs {
       status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/CI/dev/terraform_apply"
+      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/terraform_apply"
     }
   }
 
@@ -327,7 +327,7 @@ resource "aws_codebuild_project" "tf_apply" {
     location        = var.github_repo_url
     git_clone_depth = 1
 
-    buildspec = "deployment/CI/dev/cfg/buildspec_tf_apply_batch.yml"
+    buildspec = "CI_CD/cfg/buildspec_tf_apply_batch.yml"
 
     git_submodules_config {
       fetch_submodules = false
@@ -437,7 +437,7 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
     location        = var.github_repo_url
     git_clone_depth = 1
 
-    buildspec = "deployment/CI/dev/cfg/buildspec_deploy_airflow.yml"
+    buildspec = "CI_CD/cfg/buildspec_deploy_airflow.yml"
 
     git_submodules_config {
       fetch_submodules = false
@@ -485,7 +485,7 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
   logs_config {
     s3_logs {
       status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/CI/dev/deploy_airflow_in_place/logs"
+      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/dev/deploy_airflow_in_place/logs"
     }
   }
 
@@ -527,7 +527,7 @@ resource "aws_codebuild_project" "airflow_docker_build" {
   logs_config {
     s3_logs {
       status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/CI/dev/docker_build/logs"
+      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/docker_build/logs"
     }
   }
 
@@ -536,7 +536,7 @@ resource "aws_codebuild_project" "airflow_docker_build" {
     location        = var.github_repo_url
     git_clone_depth = 1
 
-    buildspec = "deployment/CI/dev/cfg/buildspec_docker_build.yml"
+    buildspec = "CI_CD/cfg/buildspec_docker_build.yml"
     git_submodules_config {
       fetch_submodules = false
     }
