@@ -145,7 +145,7 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:codebuild:region:account-id:project/${local.resource_prefix}-*",
+      "Resource": "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:project/${local.resource_prefix}-*",
       "Action": "codebuild:*"
     },
     {
@@ -155,7 +155,7 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:iam::account-id:role/${local.resource_prefix}-*",
+      "Resource": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}-*",
       "Action": [
           "iam:GetRole",
           "iam:GetRolePolicy",
@@ -174,23 +174,28 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:ecr:account-id:${var.client}-*",
+      "Resource": "arn:aws:ecr:${data.aws_caller_identity.current.account_id}:${var.client}-*",
       "Action": "ecr:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:glue:account-id:${local.resource_prefix}-*",
+      "Resource": "arn:aws:glue:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
       "Action": "glue:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:athena:account-id:${local.resource_prefix}-*",
+      "Resource": "arn:aws:athena:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
       "Action": "athena:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:ec2:account-id:${local.resource_prefix}-*",
+      "Resource": "arn:aws:ec2:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
       "Action": "ec2:*"
+    },
+    {
+      "Effect": "Allow",
+      "Resource": "arn:aws:ec2:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
+      "Action": "vpc:*"
     }
   ]
 } 

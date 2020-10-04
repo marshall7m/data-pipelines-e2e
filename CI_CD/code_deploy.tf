@@ -38,12 +38,12 @@ resource "aws_iam_policy" "codedeploy_ssm_ps_access" {
     {
       "Effect": "Allow",
       "Action": "ssm:GetParameters",
-      "Resource": "arn:aws:ssm:region:account-id:parameter/${var.client}-${var.project_id}-*"
+      "Resource": "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.client}-${var.project_id}-*"
     },
     {
       "Effect": "Allow",
       "Action": "kms:Decrypt",
-      "Resource": "arn:aws:kms:region:account-id:alias/aws/ssm"
+      "Resource": "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/aws/ssm"
     }
   ]
 }

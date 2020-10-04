@@ -12,9 +12,11 @@ data "aws_ssm_parameter" "ssh_cidr" {
 }
 
 module "airflow_aws_resources" {
-  source                      = "../../../../../../projects/tf_modules/airflow-aws-resources"
+  source                      = "github.com/marshall7m/tf_modules/terraform-aws-airflow"
+  # source                      = "../../../../../../projects/tf_modules/terraform-aws-airflow"
   resource_prefix             = local.resource_prefix
   env                         = var.env
+  region  = "us-west-2"
   private_bucket              = var.private_bucket
 
   vpc_id                      = data.terraform_remote_state.networking.outputs.vpc_id
@@ -28,7 +30,6 @@ module "airflow_aws_resources" {
   create_airflow_db_sg        = false
 
   airflow_instance_ssm_access = true
-  airflow_instance_ssm_region = "us-west-2"
   airflow_instance_ami  = "ami-0841edc20334f9287"
   airflow_instance_type = "t2.micro"
   ecr_repo_url = data.terraform_remote_state.CI_CD.outputs.ecr_repo_url
