@@ -3,7 +3,7 @@ resource "aws_s3_bucket" "private_bucket" {
   acl    = "private"
 
   tags = {
-    name        = "private-sparkify"
+    name = "private-sparkify"
   }
 }
 

@@ -18,6 +18,10 @@ variable "env" {
   default = "dev"
 }
 
+variable "region" {
+  default = "us-west-2"
+}
+
 data "terraform_remote_state" "networking" {
   backend = "s3"
   config = {

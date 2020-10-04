@@ -263,11 +263,11 @@ resource "aws_codebuild_project" "tf_validate_plan" {
   }
 
   tags = {
-    client      = "${var.client}"
-    project_id  = "${var.project_id}"
-    terraform   = "true"
-    service     = "CI"
-    version     = "0.0.1"
+    client     = "${var.client}"
+    project_id = "${var.project_id}"
+    terraform  = "true"
+    service    = "CI"
+    version    = "0.0.1"
   }
 }
 
@@ -339,11 +339,11 @@ resource "aws_codebuild_project" "tf_apply" {
   }
 
   tags = {
-    client      = "${var.client}"
-    project_id  = "${var.project_id}"
-    terraform   = "true"
-    service     = "CI"
-    version     = "0.0.1"
+    client     = "${var.client}"
+    project_id = "${var.project_id}"
+    terraform  = "true"
+    service    = "CI"
+    version    = "0.0.1"
   }
 }
 
@@ -363,7 +363,7 @@ resource "aws_codebuild_project" "tf_apply" {
 #     git_clone_depth = 1
 
 #     buildspec = "deployment/CI/dev/cfg/buildspec_deploy_airflow.yml"
-    
+
 #     git_submodules_config {
 #       fetch_submodules = false
 #     }
@@ -438,7 +438,7 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
     git_clone_depth = 1
 
     buildspec = "deployment/CI/dev/cfg/buildspec_deploy_airflow.yml"
-    
+
     git_submodules_config {
       fetch_submodules = false
     }
@@ -490,11 +490,11 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
   }
 
   tags = {
-    client = "${var.client}"
+    client     = "${var.client}"
     project_id = "${var.project_id}"
-    terraform   = "true"
-    service     = "CI"
-    version     = "0.0.1"
+    terraform  = "true"
+    service    = "CI"
+    version    = "0.0.1"
   }
 }
 
@@ -543,11 +543,11 @@ resource "aws_codebuild_project" "airflow_docker_build" {
   }
 
   tags = {
-    client      = "${var.client}"
-    project_id  = "${var.project_id}"
-    terraform   = "true"
-    service     = "CI"
-    version     = "0.0.1"
+    client     = "${var.client}"
+    project_id = "${var.project_id}"
+    terraform  = "true"
+    service    = "CI"
+    version    = "0.0.1"
   }
 }
 
@@ -557,9 +557,9 @@ resource "aws_codebuild_project" "airflow_docker_build" {
 #   build_timeout = "5"
 #   service_role  = aws_iam_role.code_build.arn
 
-  # artifacts {
-  #   type = "NO_ARTIFACTS"
-  # }
+# artifacts {
+#   type = "NO_ARTIFACTS"
+# }
 #   cache {
 #     type  = "LOCAL"
 #     modes = ["LOCAL_DOCKER_LAYER_CACHE"]

@@ -26,37 +26,30 @@ resource "aws_iam_policy" "codedeploy_ssm_ps_access" {
   name        = "${var.client}-${var.project_id}-CodeDeploy-SSM-PS-Read-Access"
   path        = "/"
   description = "Allows CodeDeploy to access SSM Parameter values associated with project"
-  policy = << EOF 
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-        "Effect": "Allow",
-        "Action": [
-            "ssm:DescribeParameters"
-        ],
-        "Resource": "*"
+      "Effect": "Allow",
+      "Action": "ssm:DescribeParameters",
+      "Resource": "*"
     },
     {
       "Effect": "Allow",
-      "Action": [
-          "ssm:GetParameters"
-      ],
-      "Resource": [
-          "arn:aws:ssm:${var.region}:account-id:parameter/${var.client}-${var.project_id}-*"
-      ]
+      "Action": "ssm:GetParameters",
+      "Resource": "arn:aws:ssm:region:account-id:parameter/${var.client}-${var.project_id}-*"
     },
     {
       "Effect": "Allow",
-      "Action": [
-          "kms:Decrypt"
-      ],
-      "Resource": “arn:aws:kms:${var.region}:account-id:alias/aws/ssm”
+      "Action": "kms:Decrypt",
+      "Resource": "arn:aws:kms:region:account-id:alias/aws/ssm"
     }
   ]
 }
 EOF
 }
+
 resource "aws_iam_role_policy_attachment" "CodeDeploy-SSM-PS-Read-Access" {
   policy_arn = aws_iam_policy.codedeploy_ssm_ps_access.arn
   role       = aws_iam_role.code_deploy.name
