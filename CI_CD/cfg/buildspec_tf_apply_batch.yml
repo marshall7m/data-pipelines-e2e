@@ -1,11 +1,6 @@
 version: 0.2
 batch:
   build-graph:
-    - identifier: CI/CD
-      env:
-        compute-type: BUILD_GENERAL1_SMALL 
-        variables:
-          TF_DIR_PATH_TMPL: deployment/CI/\$BRANCH_NAME
     - identifier: networking
       env:
         compute-type: BUILD_GENERAL1_SMALL 
