@@ -42,12 +42,12 @@ phases:
               echo "*************** terraform init ******************"
               echo "******* At directory: ${sub_dir} ********"
               echo "*************************************************"
-              terraform init
+              terraform init || exit 1
               echo ""
               echo "*************** terraform plan ******************"
               echo "******* At directory: ${sub_dir} ********"
               echo "*************************************************"
-              terraform plan
+              terraform plan || exit 1
               cd - > /dev/null 
             fi
           done  

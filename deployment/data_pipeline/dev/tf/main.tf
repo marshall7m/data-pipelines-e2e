@@ -7,9 +7,9 @@
 #   name = "AIRFLOW_POSTGRES_PASSWORD"
 # }
 
-data "aws_ssm_parameter" "ssh_cidr" {
-  name = "AIRFLOW_EC2_SSH_IPS"
-}
+# data "aws_ssm_parameter" "ssh_cidr" {
+#   name = "AIRFLOW_EC2_SSH_IPS"
+# }
 
 module "airflow_aws_resources" {
   source                      = "github.com/marshall7m/tf_modules/terraform-aws-airflow"
@@ -34,8 +34,8 @@ module "airflow_aws_resources" {
   airflow_instance_type = "t2.micro"
   ecr_repo_url = data.terraform_remote_state.CI_CD.outputs.ecr_repo_url
   airflow_instance_key_name = "test"
-  airflow_instance_ssh_cidr_blocks = [data.aws_ssm_parameter.ssh_cidr.value]
-
+  # airflow_instance_ssh_cidr_blocks = [data.aws_ssm_parameter.ssh_cidr.value]
+  
   # airflow_db_instance_class    = "db.t2.micro"
   # airflow_db_allocated_storage = 5
   # airflow_db_name              = "${local.resource_prefix}-airflow-meta-db"

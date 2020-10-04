@@ -133,25 +133,47 @@ resource "aws_iam_role_policy" "code_build_policy" {
       "Effect": "Allow",
       "Resource": "*",
       "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
       ]
     },
     {
       "Effect": "Allow",
-      "Resource": "${aws_s3_bucket.private_bucket.arn}",
+      "Resource": "*",
       "Action": "s3:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:project/${local.resource_prefix}-*",
+      "Resource": "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:project/${var.client}-${var.project_id}-*",
       "Action": "codebuild:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "*",
-      "Action": "ssm:GetParameters"
+      "Resource": [
+        "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/CodeBuild/*",
+        "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.client}-${var.project_id}-*"
+      ],
+      "Action": [
+        "ssm:GetParameters",
+        "ssm:PutParameter"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Resource": "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:association/*",
+      "Action": "ssm:DescribeAssociation"
+    },
+    {
+      "Effect": "Allow",
+      "Resource":  [
+          "arn:aws:ssm:${data.aws_region.current.name}::document/AWS-UpdateSSMAgent",
+          "arn:aws:ssm:${data.aws_region.current.name}::document/AWS-RunShellScript",
+          "arn:aws:ssm:${data.aws_region.current.name}::document/AWS-ConfigureAWSPackage"
+      ],
+      "Action": [
+          "ssm:GetDocument"
+      ]
     },
     {
       "Effect": "Allow",
@@ -189,7 +211,7 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:ec2:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
+      "Resource": "*",
       "Action": "ec2:*"
     },
     {
