@@ -6,8 +6,6 @@ batch:
         compute-type: BUILD_GENERAL1_SMALL 
         variables:
           TF_DIR_PATH_TMPL: deployment/networking/\$BRANCH_NAME
-      depend-on:
-        - CI/CD
     - identifier: data_pipeline
       env:
         compute-type: BUILD_GENERAL1_SMALL
@@ -28,9 +26,9 @@ phases:
       - unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip && mv terraform /usr/local/bin/
   pre_build:
     commands:
-      # CodeBuild environment variables
+      # Environment variables
       #   BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
-      #   TF_DIR_PATH -- Directory within branch ($BRANCH_NAME) that will be iterated through for executing `terraform apply`
+      #   TF_DIR_PATH_TMPL -- Directory that will be iterated through for executing `terraform apply`. The directory path is formatted with the branch name ($BRANCH_NAME).
       - |
         if [[ -z "${BRANCH_NAME}" ]]; then
           # extract branch from github webhook
