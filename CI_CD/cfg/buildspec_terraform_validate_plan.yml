@@ -1,23 +1,24 @@
 version: 0.2
-
+env:
+  shell: bash
 phases:
   install:
     commands:
-      - docker pull hashicorp/terraform:$TERRAFORM_VERSION
+      - wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -q
+      - unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip && mv terraform /usr/local/bin/
+      # install/incorporate terraform validator? 
   pre_build:
     commands:
-      # CodeBuild environment variables:
+      # CodeBuild environment variables
       #   BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
       #   TF_ROOT_DIR -- Directory within branch ($BRANCH_NAME) that will be iterated through for terraform planning and testing
       #   LIVE_BRANCHES -- Branches that represent a live cloud environment
-      - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_PARAM
-      - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_PARAM
       - |
         if [[ -z "${BRANCH_NAME}" ]]; then
           # extract branch from github webhook
           BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
         fi
-      - "echo Triggered Branch: $BRANCH_NAME "
+      - "echo Triggered Branch: $BRANCH_NAME"
       - |
         if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
           # Iterate only through BRANCH_NAME directory
@@ -31,8 +32,8 @@ phases:
     commands:
       - |
         for dir in $TF_ROOT_DIR; do
-        #get list of non-hidden directories within $dir/
-        service_dir_list=$(find "${dir}" -type d | grep -v '/\.')
+          #get list of non-hidden directories within $dir/
+          service_dir_list=$(find "${dir}" -type d | grep -v '/\.')
           for sub_dir in $service_dir_list; do
             #if $sub_dir contains .tf or .tfvars files
             if (ls ${sub_dir}/*.tf) > /dev/null 2>&1 || (ls ${sub_dir}/*.tfvars) > /dev/null 2>&1; then
@@ -41,15 +42,13 @@ phases:
               echo "*************** terraform init ******************"
               echo "******* At directory: ${sub_dir} ********"
               echo "*************************************************"
-              docker run -it hashicorp/terraform:$TERRAFORM_VERSION init
+              terraform init
               echo ""
               echo "*************** terraform plan ******************"
               echo "******* At directory: ${sub_dir} ********"
               echo "*************************************************"
-              docker run -it hashicorp/terraform:$TERRAFORM_VERSION apply -auto-approve
+              terraform plan
               cd - > /dev/null 
             fi
-          done 
-        done
-      
-
+          done  
+        done 

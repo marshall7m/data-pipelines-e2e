@@ -1,34 +1,18 @@
-ARG AIRFLOW_IMG_TAG="latest"
+ARG AIRFLOW_IMG_TAG
 FROM apache/airflow:$AIRFLOW_IMG_TAG
 
 USER airflow
-WORKDIR $AIRFLOW_HOME
 
 ARG REQUIREMENTS_TXT=""
-ENV REQUIREMENTS_TXT=${REQUIREMENTS_TXT}
+COPY --chown=airflow:root $REQUIREMENTS_TXT ${AIRFLOW_HOME}
 
-COPY --chown=airflow $REQUIREMENTS_TXT $REQUIREMENTS_TXT
+RUN pip install --user -r "requirements.txt"
 
-ARG AIRFLOW_CONSTRAINTS_URL=""
-ENV AIRFLOW_CONSTRAINTS_URL=${AIRFLOW_CONSTRAINTS_URL}
+ARG CONFIG_FOLDER=""
+COPY --chown=airflow:root $CONFIG_FOLDER ${AIRFLOW_HOME}/cfg/
 
-RUN if [ ! -z "${REQUIREMENTS_TXT}" ]; then pip install --user --upgrade pip && \
-    pip install --user -r "${REQUIREMENTS_TXT}" \
-    --constraint "${AIRFLOW_CONSTRAINTS_URL}"; fi
+ARG DAGS_FOLDER=""
+COPY --chown=airflow:root $DAGS_FOLDER ${AIRFLOW_HOME}/dags/
 
-ARG DAGS_FOLDER="dags/"
-ENV DAGS_FOLDER=${DAGS_FOLDER}
-
-COPY --chown=airflow dags/ $AIRFLOW_HOME/dags/
-
-ARG PLUGINS_FOLDER="plugins/"
-ENV PLUGINS_FOLDER=${PLUGINS_FOLDER}
-
-COPY --chown=airflow plugins/ $AIRFLOW_HOME/plugins/
-
-ARG CONFIG_FOLDER="cfg/"
-ENV CONFIG_FOLDER=${CONFIG_FOLDER}
-
-COPY --chown=airflow cfg/ $AIRFLOW_HOME/cfg/
-
-
+ARG PLUGINS_FOLDER=""
+COPY --chown=airflow:root $PLUGINS_FOLDER ${AIRFLOW_HOME}/plugins/

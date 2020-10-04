@@ -10,9 +10,9 @@ default_args: &dag_default_args
     catchup: False
 dags:
     sparkify_analytics:
-        dag_id: sparkify_analytics
+        dag_id: sparkify_analytics-v0.0.1
         description: Transforms raw data to parquet data and executes AWS Athena queries
-        schedule_interval: \* * * 6
+        # schedule_interval: None
         # start_date: \2018-11-11
         # end_date: \2018-11-11
         max_active_runs: 1

@@ -4,7 +4,6 @@ resource "aws_s3_bucket" "private_bucket" {
 
   tags = {
     name        = "private-sparkify"
-    environment = "${var.env}"
   }
 }
 
