@@ -1,27 +1,3 @@
-locals {
-  resource_prefix = "${var.client}-${var.project_id}-${var.env}"
-}
-
-variable "project_id" {
-  default = "usr-olap"
-}
-
-variable "private_bucket" {
-  default = "private-sparkify"
-}
-
-variable "client" {
-  default = "sparkify"
-}
-
-variable "env" {
-  default = "dev"
-}
-
-variable "region" {
-  default = "us-west-2"
-}
-
 data "terraform_remote_state" "networking" {
   backend = "s3"
   config = {

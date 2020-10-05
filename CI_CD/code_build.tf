@@ -289,7 +289,7 @@ resource "aws_codebuild_project" "tf_validate_plan" {
 }
 
 resource "aws_codebuild_project" "tf_apply" {
-  name          = "${local.resource_prefix}-tf-apply"
+  name          = "${var.ci_prefix}-tf-apply"
   description   = "Perform terraform apply with -auto-approve"
   build_timeout = "5"
   service_role  = aws_iam_role.code_build.arn

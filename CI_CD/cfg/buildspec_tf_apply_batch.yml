@@ -5,16 +5,14 @@ batch:
       env:
         compute-type: BUILD_GENERAL1_SMALL 
         variables:
-          TF_DIR_PATH_TMPL: deployment/networking/\$BRANCH_NAME
+          TF_DIR_PATH_TMPL: "deployment/networking/$BRANCH_NAME"
     - identifier: data_pipeline
       env:
         compute-type: BUILD_GENERAL1_SMALL
         variables:
-          TF_DIR_PATH_TMPL: deployment/data_pipeline/\$BRANCH_NAME
+          TF_DIR_PATH_TMPL: "deployment/data_pipeline/$BRANCH_NAME"
       depend-on:
         - networking
-
-version: 0.2
 env:
   shell: bash
   variables:

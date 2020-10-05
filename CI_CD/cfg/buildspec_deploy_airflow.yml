@@ -3,7 +3,7 @@ version: 0.2
 phases:
     build:
       commands:
-        - Pusing Airflow src to S3 on `date`
+        - echo Pusing Airflow src to S3 on `date`
         - S3_LOCATION=$(echo s3://$BUCKET/$KEY/$CODEBUILD_RESOLVED_SOURCE_VERSION.zip)
         - $(aws deploy push \
             --application-name $APPLICATION_NAME \
@@ -14,7 +14,7 @@ phases:
         
     post_build:
       commands:
-        - Deploying Airflow src to $DEPLOYMENT_GROUP_NAME on `date`
+        - echo Deploying Airflow src to $DEPLOYMENT_GROUP_NAME on `date`
         - $(aws deploy create-deployment \
             --application-name $APPLICATION_NAME \
             --deployment-config-name $DEPLOYMENT_CONFIG_NAME \
