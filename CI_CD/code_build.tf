@@ -177,50 +177,40 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}-*",
-      "Action": [
-          "iam:GetRole",
-          "iam:GetRolePolicy",
-          "iam:AddRoleToInstanceProfile",
-          "iam:AttachRolePolicy",
-          "iam:CreateInstanceProfile",
-          "iam:CreatePolicy",
-          "iam:CreateRole",
-          "iam:ListAttachedRolePolicies",
-          "iam:ListPolicies",
-          "iam:ListRoles",
-          "iam:PassRole",
-          "iam:PutRolePolicy",
-          "iam:UpdateAssumeRolePolicy"
-      ]
+      "Resource": [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}-*",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy//${local.resource_prefix}-*",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:instance-profile/${local.resource_prefix}-*"
+      ],
+      "Action": "iam:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:ecr:${data.aws_caller_identity.current.account_id}:${var.client}-*",
+      "Resource": "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.client}-*",
       "Action": "ecr:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:glue:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
+      "Resource": "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
       "Action": "glue:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:athena:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
+      "Resource": "arn:aws:athena:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
       "Action": "athena:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "*",
+      "Resource": "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
       "Action": "ec2:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:ec2:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
+      "Resource": "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
       "Action": "vpc:*"
     }
   ]
-} 
+}
 POLICY
 }
 
