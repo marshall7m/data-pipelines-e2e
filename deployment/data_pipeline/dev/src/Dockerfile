@@ -16,3 +16,4 @@ COPY --chown=airflow:root $DAGS_FOLDER ${AIRFLOW_HOME}/dags/
 
 ARG PLUGINS_FOLDER=""
 COPY --chown=airflow:root $PLUGINS_FOLDER ${AIRFLOW_HOME}/plugins/
+

@@ -15,7 +15,7 @@ resource "aws_codebuild_webhook" "tf_pr" {
 }
 
 resource "aws_codebuild_webhook" "tf_merge" {
-  project_name = aws_codebuild_project.tf_apply.name
+  project_name = "${local.resource_prefix}-tf-apply"
 
   filter_group {
     filter {
@@ -23,9 +23,14 @@ resource "aws_codebuild_webhook" "tf_merge" {
       pattern = "PULL_REQUEST_MERGED"
     }
 
+    # filter {
+    #   type    = "BASE_REF"
+    #   pattern = "^refs\\/heads\\/(dev|prod)$"
+    # }
+
     filter {
-      type    = "BASE_REF"
-      pattern = "^refs\\/heads\\/(dev|prod)$"
+      type    = "HEAD_REF"
+      pattern = "(dev|prod)"
     }
 
     filter {
@@ -33,6 +38,7 @@ resource "aws_codebuild_webhook" "tf_merge" {
       pattern = "^.*[.](tf|tfvars)$"
     }
   }
+  depends_on = [null_resource.tf_apply_batch]
 }
 
 resource "aws_codebuild_webhook" "deploy_airflow_in_place" {
@@ -145,14 +151,30 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:project/${var.client}-${var.project_id}-*",
+      "Resource": "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:project/${local.resource_prefix}-*",
       "Action": "codebuild:*"
     },
     {
       "Effect": "Allow",
       "Resource": [
+        "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:workgroup/${local.resource_prefix}-*",
+        "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:workgroup/primary",
+        "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:primary/${local.resource_prefix}-*"
+      ],
+      "Action": "athena:*"
+    },
+    {
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog/${local.resource_prefix}-*"
+      ],
+      "Action": "glue:*"
+    },
+    {
+      "Effect": "Allow",
+      "Resource": [
         "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/CodeBuild/*",
-        "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.client}-${var.project_id}-*"
+        "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${local.resource_prefix}-*"
       ],
       "Action": [
         "ssm:GetParameters",
@@ -215,7 +237,7 @@ POLICY
 }
 
 resource "aws_codebuild_project" "tf_validate_plan" {
-  name          = "${local.resource_prefix}_tf_validate_plan"
+  name          = "${local.resource_prefix}-tf-validate-plan"
   description   = "Perform terraform plan and terraform validator"
   build_timeout = "5"
   service_role  = aws_iam_role.code_build.arn
@@ -288,81 +310,21 @@ resource "aws_codebuild_project" "tf_validate_plan" {
   }
 }
 
-resource "aws_codebuild_project" "tf_apply" {
-  name          = "${var.ci_prefix}-tf-apply"
-  description   = "Perform terraform apply with -auto-approve"
-  build_timeout = "5"
-  service_role  = aws_iam_role.code_build.arn
+#workaround until Terraform Codebuild batch resource is available
+resource "null_resource" "tf_apply_batch" {
 
-  artifacts {
-    type = "NO_ARTIFACTS"
-  }
-
-  environment {
-    compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/standard:4.0"
-    type                        = "LINUX_CONTAINER"
-    image_pull_credentials_type = "CODEBUILD"
-    privileged_mode             = true
-
-    environment_variable {
-      name  = "TF_ROOT_DIR"
-      value = "deployment"
+  provisioner "local-exec" {
+    command = "bash tmp_code_build.sh"
+    interpreter = ["/bin/bash", "-c"]
+    environment = {
+      name = "${local.resource_prefix}-tf-apply"
+      client = var.client
+      project_id = var.project_id
+      service_role_arn = aws_iam_role.code_build.arn
     }
-
-    environment_variable {
-      name  = "LIVE_BRANCHES"
-      value = "(dev, prod)"
-    }
-
-    environment_variable {
-      name  = "TERRAFORM_VERSION"
-      value = "0.12.28"
-    }
-
-    environment_variable {
-      name  = "TF_IN_AUTOMATION"
-      value = "true"
-    }
-
-    environment_variable {
-      name  = "TF_CLI_ARGS"
-      value = "-input=false"
-    }
-  }
-
-
-  logs_config {
-    s3_logs {
-      status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/terraform_apply"
-    }
-  }
-
-  source {
-    type            = "GITHUB"
-    location        = var.github_repo_url
-    git_clone_depth = 1
-
-    buildspec = "CI_CD/cfg/buildspec_tf_apply_batch.yml"
-
-    git_submodules_config {
-      fetch_submodules = false
-    }
-
-    # auth {
-    #   type = "OAUTH"
-    # }
-  }
-
-  tags = {
-    client     = "${var.client}"
-    project_id = "${var.project_id}"
-    terraform  = "true"
-    service    = "CI"
-    version    = "0.0.1"
   }
 }
+
 
 # resource "aws_codebuild_project" "deploy_airflow_blue_green" {
 #   name          = "deploy_airflow"
@@ -480,12 +442,12 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
 
     environment_variable {
       name  = "DEPLOYMENT_CONFIG_NAME"
-      value = aws_codedeploy_deployment_config.airflow_src.deployment_config_id
+      value = aws_codedeploy_deployment_config.airflow_src.deployment_config_name
     }
 
     environment_variable {
       name  = "DEPLOYMENT_GROUP_NAME"
-      value = aws_codedeploy_deployment_group.deploy_airflow_inplace.id
+      value = aws_codedeploy_deployment_group.deploy_airflow_inplace.deployment_group_name
     }
 
     environment_variable {
@@ -495,7 +457,7 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
 
     environment_variable {
       name  = "SOURCE"
-      value = "deployment/data_pipeline/dev/src/"
+      value = "deployment/data_pipeline/dev/"
     }
   }
 
@@ -568,6 +530,61 @@ resource "aws_codebuild_project" "airflow_docker_build" {
   }
 }
 
+# resource "aws_codebuild_project" "dags_unit_tests" {
+#   name          = "${local.resource_prefix}-airflow-apply"
+#   description   = "Perform terraform apply with -auto-approve"
+#   build_timeout = "5"
+#   service_role  = aws_iam_role.code_build.arn
+
+#   artifacts {
+#     type = "NO_ARTIFACTS"
+#   }
+
+#   environment {
+#     compute_type                = "BUILD_GENERAL1_SMALL"
+#     image                       = "aws/codebuild/standard:4.0"
+#     type                        = "LINUX_CONTAINER"
+#     image_pull_credentials_type = "CODEBUILD"
+
+#     environment_variable {
+#       name  = "TF_ROOT_DIR"
+#       value = "deployment"
+#     }
+#   }
+
+
+#   logs_config {
+#     s3_logs {
+#       status   = "ENABLED"
+#       location = "${aws_s3_bucket.private_bucket.id}/CI_CD/terraform_apply"
+#     }
+#   }
+
+#   source {
+#     type            = "GITHUB"
+#     location        = var.github_repo_url
+#     git_clone_depth = 1
+
+#     buildspec = "CI_CD/cfg/buildspec_tf_apply_batch.yml"
+
+#     git_submodules_config {
+#       fetch_submodules = false
+#     }
+
+#     # auth {
+#     #   type = "OAUTH"
+#     # }
+#   }
+
+#   tags = {
+#     client     = "${var.client}"
+#     project_id = "${var.project_id}"
+#     terraform  = "true"
+#     service    = "CI"
+#     version    = "0.0.1"
+#   }
+# }
+
 # resource "aws_codebuild_project" "airflow_batch_build" {
 #   name          = "airflow_batch_build"
 #   description   = "Compiles Airflow from source, DAG dependencies and project DAGs into a Docker image and pushes the image to ECR"
@@ -629,5 +646,83 @@ resource "aws_codebuild_project" "airflow_docker_build" {
 #     terraform   = "true"
 #     service     = "CI"
 #     version     = "0.0.1"
+#   }
+# }
+
+
+### ADD AND UPDATE WHEN TERRAFORM CODEBUILD BATCH PROJECTS COME OUT
+# resource "aws_codebuild_project" "tf_apply" {
+#   name          = "${local.resource_prefix}-tf-apply"
+#   description   = "Perform terraform apply with -auto-approve"
+#   build_timeout = "5"
+#   service_role  = aws_iam_role.code_build.arn
+
+#   artifacts {
+#     type = "NO_ARTIFACTS"
+#   }
+
+#   environment {
+#     compute_type                = "BUILD_GENERAL1_SMALL"
+#     image                       = "aws/codebuild/standard:4.0"
+#     type                        = "LINUX_CONTAINER"
+#     image_pull_credentials_type = "CODEBUILD"
+#     privileged_mode             = true
+
+#     environment_variable {
+#       name  = "TF_ROOT_DIR"
+#       value = "deployment"
+#     }
+
+#     environment_variable {
+#       name  = "LIVE_BRANCHES"
+#       value = "(dev, prod)"
+#     }
+
+#     environment_variable {
+#       name  = "TERRAFORM_VERSION"
+#       value = "0.12.28"
+#     }
+
+#     environment_variable {
+#       name  = "TF_IN_AUTOMATION"
+#       value = "true"
+#     }
+
+#     environment_variable {
+#       name  = "TF_CLI_ARGS"
+#       value = "-input=false"
+#     }
+#   }
+
+
+#   logs_config {
+#     s3_logs {
+#       status   = "ENABLED"
+#       location = "${aws_s3_bucket.private_bucket.id}/CI_CD/terraform_apply"
+#     }
+#   }
+
+#   source {
+#     type            = "GITHUB"
+#     location        = var.github_repo_url
+#     git_clone_depth = 1
+
+#     buildspec = "CI_CD/cfg/buildspec_tf_apply_batch.yml"
+
+#     git_submodules_config {
+#       fetch_submodules = false
+#     }
+
+#     # auth {
+#     #   type = "OAUTH"
+#     # }
+#   }
+
+#   tags = {
+#     client     = "${var.client}"
+#     project_id = "${var.project_id}"
+#     terraform  = "true"
+#     service    = "CI"
+#     version    = "0.0.1"
 #   }
 # }

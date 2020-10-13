@@ -1,11 +1,3 @@
-
-
-# data "aws_prefix_list" "ec2" {
-#   name = "com.amazonaws.us-west-2.ec2"
-# }
-
-# aws_prefix_list.ec2.cidr_blocks
-
 resource "aws_security_group" "vpc_endpoints" {
   name        = "${local.resource_prefix}-vpc-endpoint-sg"
   description = "Default security group for vpc endpoints"
@@ -53,10 +45,6 @@ module "vpc" {
   private_dedicated_network_acl = true
   private_subnet_suffix = "private"
 
-  # public_subnets = ["10.0.0.96/28", "10.0.0.128/28"]
-  # public_dedicated_network_acl = true
-  # public_subnet_suffix = "public"
-
   enable_s3_endpoint = true
 
   enable_ec2messages_endpoint = true
@@ -64,7 +52,6 @@ module "vpc" {
   enable_ec2_endpoint = true
   ec2_endpoint_security_group_ids = [aws_security_group.vpc_endpoints.id]
   
-  # ssm_endpoint_subnet_ids = 
   enable_ssm_endpoint = true
   ssm_endpoint_security_group_ids = [aws_security_group.vpc_endpoints.id]
   enable_ssmmessages_endpoint = true
@@ -102,6 +89,7 @@ module "vpc" {
       "rule_number": 102
     }
   ]
+  
   private_outbound_acl_rules = [
     {
       "description": "Allows outbound https traffic for aws package repos requests"
@@ -122,32 +110,11 @@ module "vpc" {
       "rule_number": 102
     }
   ]
-  public_inbound_acl_rules = [
-    {
-      "description": "Allows inbound traffic from ephemeral port ranges for NAT gateway requests"
-      "cidr_block": "0.0.0.0/0",
-      "from_port": 1024,
-      "to_port": 65535,
-      "protocol": "tcp",
-      "rule_action": "allow",
-      "rule_number": 103
-    }
-  ]
-  public_outbound_acl_rules = [
-    {
-      "description": "Allows outbound traffic from ephemeral port ranges for NAT gateway requests"
-      "cidr_block": "0.0.0.0/0",
-      "from_port": 1024,
-      "to_port": 65535,
-      "protocol": "tcp",
-      "rule_action": "allow",
-      "rule_number": 104
-    }
-  ]
   
   vpc_endpoint_tags = {
     type = "vpc-endpoint"
   }
+
   tags = {
         project_id = "${var.project_id}"
         Environment = "${var.env}"

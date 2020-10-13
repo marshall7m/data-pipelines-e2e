@@ -1,16 +1,16 @@
 version: 0.2
 
 phases:
+    pre_build:
+      commands:
+        - aws ssm put-parameter \
+          --name ${DEPLOYMENT_GROUP_NAME}-IMAGE-TAG \
+          --value $CODEBUILD_RESOLVED_SOURCE_VERSION \
+          --description "Airflow image tag used for specified deployment group"
+          --type "String" \
+          --tier Standard \
+          --overwrite
     build:
-      pre_build:
-        commands:
-          - aws ssm put-parameter \
-            --name ${DEPLOYMENT_GROUP_NAME}-IMAGE-TAG \
-            --value $CODEBUILD_RESOLVED_SOURCE_VERSION \
-            --description "Airflow image tag used for specified deployment group"
-            --type "String" \
-            --tier Standard \
-            --overwrite
       commands:
         - echo Pusing Airflow src to S3 on `date`
         - S3_LOCATION=$(echo s3://$BUCKET/$KEY/$CODEBUILD_RESOLVED_SOURCE_VERSION.zip)

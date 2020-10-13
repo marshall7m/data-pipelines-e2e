@@ -17,9 +17,40 @@ resource "aws_iam_role" "code_deploy" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
+resource "aws_iam_role_policy_attachment" "aws_code_deploy_role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
   role       = aws_iam_role.code_deploy.name
+}
+
+resource "aws_iam_role_policy_attachment" "s3" {
+  role       = aws_iam_role.code_deploy.name
+  policy_arn = aws_iam_policy.appspec_policy.arn
+}
+
+resource "aws_iam_policy" "appspec_policy" {
+  name        = "${var.client}-${var.project_id}-CodeDeploy-Appspec-AWS-Access"
+  path        = "/"
+  description = "Allows CodeDeploy appspec.yml to access have access to necessary AWS services associated with project"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject*"
+      ],
+      "Resource": "${aws_s3_bucket.private_bucket.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "codedeploy:*",
+      "Resource": "arn:aws:codedeploy:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*/${var.client}-${var.project_id}-*"
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_iam_policy" "codedeploy_ssm_ps_access" {
@@ -65,7 +96,7 @@ resource "aws_codedeploy_deployment_config" "airflow_src" {
 
   minimum_healthy_hosts {
     type  = "HOST_COUNT"
-    value = 1
+    value = 0
   }
 }
 
@@ -80,10 +111,34 @@ resource "aws_codedeploy_deployment_group" "deploy_airflow_inplace" {
       deployment_type = "IN_PLACE"
   }
 
-  ec2_tag_filter {
-    key   = "environment"
-    type  = "KEY_AND_VALUE"
-    value = "dev"
+  ec2_tag_set {
+    ec2_tag_filter {
+      key   = "environment"
+      type  = "KEY_AND_VALUE"
+      value = "dev"
+    }
+
+    ec2_tag_filter {
+      key   = "environment"
+      type  = "KEY_AND_VALUE"
+      value = "prod"
+    }
+  }
+
+  ec2_tag_set {
+    ec2_tag_filter {
+      key   = "project_id"
+      type  = "KEY_AND_VALUE"
+      value = var.project_id
+    }
+  }
+
+    ec2_tag_set {
+    ec2_tag_filter {
+      key   = "client"
+      type  = "KEY_AND_VALUE"
+      value = var.client
+    }
   }
 
   auto_rollback_configuration {

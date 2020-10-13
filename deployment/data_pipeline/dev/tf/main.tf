@@ -11,9 +11,34 @@
 #   name = "AIRFLOW_EC2_SSH_IPS"
 # }
 
+module "sparkify_analytics" {
+  source = "./sparkify_analytics"
+  env = var.env
+}
+
+resource "aws_iam_role_policy" "airflow" {
+  count = module.airflow_aws_resources.ec2_role_name != null ? 1 : 0
+  role = module.airflow_aws_resources.ec2_role_name
+  name = "${local.resource_prefix}-airflow-ec2-s3-policy"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+        "Effect": "Allow",
+        "Action": [
+            "s3:GetObject",
+            "s3:PutObject"
+        ],
+        "Resource": "arn:aws:s3:::${var.private_bucket}/*"
+    }
+  ]
+}
+POLICY
+}
+
 module "airflow_aws_resources" {
   source                      = "github.com/marshall7m/tf_modules/terraform-aws-airflow"
-  # source                      = "../../../../../../projects/tf_modules/terraform-aws-airflow"
   resource_prefix             = local.resource_prefix
   env                         = var.env
   region  = "us-west-2"
@@ -34,6 +59,11 @@ module "airflow_aws_resources" {
   airflow_instance_type = "t2.micro"
   ecr_repo_url = data.terraform_remote_state.CI_CD.outputs.ecr_repo_url
   airflow_instance_key_name = "test"
+  airflow_instance_tags = {
+    "environment" = var.env
+    "project_id" = var.project_id
+    "client" = var.client
+  }
   # airflow_instance_ssh_cidr_blocks = [data.aws_ssm_parameter.ssh_cidr.value]
   
   # airflow_db_instance_class    = "db.t2.micro"
