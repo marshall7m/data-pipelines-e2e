@@ -1,5 +1,5 @@
 resource "aws_athena_database" "this" {
-  name   = "${replace(local.resource_prefix, "-", "_")}_db"
+  name   = aws_glue_catalog_database.this.name
   bucket = var.private_bucket
 }
 
@@ -25,7 +25,7 @@ resource "aws_athena_workgroup" "this" {
 
 resource "aws_athena_named_query" "top_day_songs" {
   name = "${local.resource_prefix}-name"
-  database = aws_glue_catalog_database.this.id
+  database = aws_athena_database.this.id
   workgroup = aws_athena_workgroup.this.name
   query = <<EOF
 SELECT 
@@ -46,7 +46,7 @@ EOF
 
 resource "aws_athena_named_query" "top_month_songs" {
   name = "${local.resource_prefix}-name"
-  database = aws_glue_catalog_database.this.id
+  database = aws_athena_database.this.id
   workgroup = aws_athena_workgroup.this.name
   query = <<EOF
 SELECT 
@@ -66,7 +66,7 @@ EOF
 
 resource "aws_athena_named_query" "top_year_songs" {
   name = "${local.resource_prefix}-name"
-  database = aws_glue_catalog_database.this.id
+  database = aws_athena_database.this.id
   workgroup = aws_athena_workgroup.this.name
   query = <<EOF
 SELECT 
@@ -85,7 +85,7 @@ EOF
 
 resource "aws_athena_named_query" "avg_session_id_item" {
   name = "${local.resource_prefix}-avg-session-id-item"
-  database = aws_glue_catalog_database.this.id
+  database = aws_athena_database.this.id
   workgroup = aws_athena_workgroup.this.name
   query = <<EOF
 SELECT
@@ -101,7 +101,7 @@ EOF
 
 resource "aws_athena_named_query" "upgrade_downgrade_count" {
   name = "${local.resource_prefix}-upgrade_downgrade_count"
-  database = aws_glue_catalog_database.this.id
+  database = aws_athena_database.this.id
   workgroup = aws_athena_workgroup.this.name
   query = <<EOF
 SELECT 

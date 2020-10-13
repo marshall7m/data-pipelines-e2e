@@ -16,27 +16,6 @@ module "sparkify_analytics" {
   env = var.env
 }
 
-resource "aws_iam_role_policy" "airflow" {
-  count = module.airflow_aws_resources.ec2_role_name != null ? 1 : 0
-  role = module.airflow_aws_resources.ec2_role_name
-  name = "${local.resource_prefix}-airflow-ec2-s3-policy"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-        "Effect": "Allow",
-        "Action": [
-            "s3:GetObject",
-            "s3:PutObject"
-        ],
-        "Resource": "arn:aws:s3:::${var.private_bucket}/*"
-    }
-  ]
-}
-POLICY
-}
-
 module "airflow_aws_resources" {
   source                      = "github.com/marshall7m/tf_modules/terraform-aws-airflow"
   resource_prefix             = local.resource_prefix

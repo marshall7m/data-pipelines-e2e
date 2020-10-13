@@ -56,7 +56,7 @@ POLICY
 }
 
 resource "aws_glue_catalog_database" "this" {
-  name = "${local.resource_prefix}-glue-catalog-db"
+  name = "${replace(local.resource_prefix, "-", "_")}_db"
 }
 
 resource "aws_glue_crawler" "raw" {
