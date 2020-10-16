@@ -65,7 +65,11 @@ resource "aws_glue_crawler" "raw" {
   role          = aws_iam_role.glue.arn
 
   s3_target {
-    path = "{s3://${data.terraform_remote_state.CI_CD.outputs.private_bucket_name}/data_pipeline/data/raw/year={year}/month={month}/day={day}/"
+    path = "{s3://${data.terraform_remote_state.CI_CD.outputs.private_bucket_name}/source_data/raw/staging_events/"
+  }
+
+  s3_target {
+    path = "{s3://${data.terraform_remote_state.CI_CD.outputs.private_bucket_name}/data_pipeline/data/raw/staging_songs/"
   }
 
   schema_change_policy {

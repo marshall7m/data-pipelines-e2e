@@ -14,6 +14,12 @@
 module "sparkify_analytics" {
   source = "./sparkify_analytics"
   env = var.env
+  athena_db = module.sparkify_etl.glue_catalog_db
+}
+
+module "sparkify_etl" {
+  source = "./sparkify_etl"
+  env = var.env
 }
 
 module "airflow_aws_resources" {

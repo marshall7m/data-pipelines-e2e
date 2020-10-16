@@ -1,5 +1,5 @@
 resource "aws_athena_database" "this" {
-  name   = aws_glue_catalog_database.this.name
+  name   = var.athena_db
   bucket = var.private_bucket
 }
 
