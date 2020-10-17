@@ -1,5 +1,5 @@
 resource "aws_athena_database" "this" {
-  name   = var.athena_db
+  name   = "test"
   bucket = var.private_bucket
 }
 
@@ -21,47 +21,6 @@ resource "aws_athena_workgroup" "this" {
       "service" = "data-pipeline"
       "dag_id" = "sparkify-analytics"
   }
-}
-
-resource "aws_athena_named_query" "top_day_songs" {
-  name = "${local.resource_prefix}-name"
-  database = aws_athena_database.this.id
-  workgroup = aws_athena_workgroup.this.name
-  query = <<EOF
-SELECT 
-    song,
-    artist,
-    COUNT(*)
-FROM songplay
-JOIN songs
-ON songs.artist_id = songplay.artist_id
-GROUP BY artist, song, COUNT(*)
-ORDER BY COUNT(*) DESC
-WHERE year = {}
-AND month = {}
-AND day = {}
-LIMIT 10
-EOF
-}
-
-resource "aws_athena_named_query" "top_month_songs" {
-  name = "${local.resource_prefix}-name"
-  database = aws_athena_database.this.id
-  workgroup = aws_athena_workgroup.this.name
-  query = <<EOF
-SELECT 
-    song,
-    artist,
-    COUNT(*)
-FROM songplay
-JOIN songs
-ON songs.artist_id = songplay.artist_id
-GROUP BY artist, song, COUNT(*)
-ORDER BY COUNT(*) DESC
-WHERE year = {}
-AND month = {}
-LIMIT 10
-EOF
 }
 
 resource "aws_athena_named_query" "top_year_songs" {

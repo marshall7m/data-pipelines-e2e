@@ -1,30 +1,26 @@
-version: 0.1
+version: 0.0
 os: linux
 files:
   - source: /src/dags/
-    destination: /dags/
+    destination: /home/ec2-user/dags/
   - source: /src/plugins/
-  destination: /plugins/
+    destination: /home/ec2-user/plugins/
   - source: /src/cfg/
-  destination: /cfg/
+    destination: /home/ec2-user/cfg/
 # hooks:
-  # ApplicationStop:
-  #   - location: airflow_cd_scripts/pause_dags.sh
-  #     timeout: 300
-  #     runas: root
-  # BeforeInstall:
-  #   - location: airflow_cd_scripts/ecr.sh
-  #     timeout: 300
-  #     runas: root
-  # AfterInstall:
-  #   - location: airflow_cd_scripts/change_permissions.sh
-  #     timeout: 300
-  #     runas: root
-  # ApplicationStart:
-  #   - location: airflow_cd_scripts/connect_airflow_db.sh
-  #     timeout: 300
-  #     runas: root
-  #   - location: airflow_cd_scripts/start_dags.sh
-  #     timeout: 300
-  #     runas: root
-
+#   ApplicationStop:
+#     - location: airflow_cd_scripts/pause_dags.sh
+#       timeout: 300
+#       runas: root
+#   BeforeInstall:
+#     - location: airflow_cd_scripts/install_airflow_img.sh
+#       timeout: 300
+#       runas: root
+#   AfterInstall:
+#     - location: airflow_cd_scripts/connect_airflow_db.sh
+#       timeout: 300
+#       runas: root
+#   ApplicationStart:
+#     - location: airflow_cd_scripts/start_dags.sh
+#       timeout: 300
+#       runas: root

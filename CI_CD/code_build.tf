@@ -23,14 +23,9 @@ resource "aws_codebuild_webhook" "tf_merge" {
       pattern = "PULL_REQUEST_MERGED"
     }
 
-    # filter {
-    #   type    = "BASE_REF"
-    #   pattern = "^refs\\/heads\\/(dev|prod)$"
-    # }
-
     filter {
-      type    = "HEAD_REF"
-      pattern = "(dev|prod)"
+      type    = "BASE_REF"
+      pattern = "^refs\\/heads\\/(dev|prod)$"
     }
 
     filter {
@@ -93,7 +88,7 @@ resource "aws_codebuild_webhook" "airflow_docker_build" {
     }
 
     filter {
-      type    = "HEAD_REF"
+      type    = "BASE_REF"
       pattern = "^refs\\/heads\\/(dev|prod)$"
     }
 
@@ -157,22 +152,6 @@ resource "aws_iam_role_policy" "code_build_policy" {
     {
       "Effect": "Allow",
       "Resource": [
-        "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:workgroup/${local.resource_prefix}-*",
-        "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:workgroup/primary",
-        "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:primary/${local.resource_prefix}-*"
-      ],
-      "Action": "athena:*"
-    },
-    {
-      "Effect": "Allow",
-      "Resource": [
-        "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog/${local.resource_prefix}-*"
-      ],
-      "Action": "glue:*"
-    },
-    {
-      "Effect": "Allow",
-      "Resource": [
         "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/CodeBuild/*",
         "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${local.resource_prefix}-*"
       ],
@@ -180,6 +159,13 @@ resource "aws_iam_role_policy" "code_build_policy" {
         "ssm:GetParameters",
         "ssm:PutParameter"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt"
+      ],
+      "Resource": “arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/aws/ssm”
     },
     {
       "Effect": "Allow",
@@ -212,18 +198,38 @@ resource "aws_iam_role_policy" "code_build_policy" {
       "Action": "ecr:*"
     },
     {
+    "Effect": "Allow",
+    "Resource": "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/${var.client}-*",
+    "Action": "ecr:*"
+    },
+    {
       "Effect": "Allow",
-      "Resource": "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
+      "Resource": "*",
+      "Action": "ecr:GetAuthorizationToken"
+    },
+    {
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog",
+        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:database/default",
+        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:crawler/${local.resource_prefix}-*",
+        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:job/${local.resource_prefix}-*",
+        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:database/${replace("${local.resource_prefix}-*", "-", "_")}"
+      ],
       "Action": "glue:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:athena:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
+      "Resource": [
+        "arn:aws:athena:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
+        "arn:aws:athena:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:workgroup/${local.resource_prefix}-*",
+        "arn:aws:athena:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:workgroup/primary"
+      ],
       "Action": "athena:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
+      "Resource": "*",
       "Action": "ec2:*"
     },
     {

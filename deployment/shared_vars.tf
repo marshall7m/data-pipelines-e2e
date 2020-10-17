@@ -19,3 +19,7 @@ variable "env" {}
 variable "region" {
   default = "us-west-2"
 }
+
+variable "dag_id_list" {
+  default = ["sparkify_analytics", "sparkify_etl"]
+}
