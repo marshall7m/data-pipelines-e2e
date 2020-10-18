@@ -1,7 +1,7 @@
-resource "aws_athena_database" "this" {
-  name   = "test"
-  bucket = var.private_bucket
-}
+# resource "aws_athena_database" "this" {
+#   name   = var.athena_db
+#   bucket = var.private_bucket
+# }
 
 resource "aws_athena_workgroup" "this" {
   name = "${local.resource_prefix}-athena-workgroup"
@@ -25,7 +25,7 @@ resource "aws_athena_workgroup" "this" {
 
 resource "aws_athena_named_query" "top_year_songs" {
   name = "${local.resource_prefix}-name"
-  database = aws_athena_database.this.id
+  database = var.athena_db
   workgroup = aws_athena_workgroup.this.name
   query = <<EOF
 SELECT 
@@ -44,7 +44,7 @@ EOF
 
 resource "aws_athena_named_query" "avg_session_id_item" {
   name = "${local.resource_prefix}-avg-session-id-item"
-  database = aws_athena_database.this.id
+  database = var.athena_db
   workgroup = aws_athena_workgroup.this.name
   query = <<EOF
 SELECT
@@ -60,7 +60,7 @@ EOF
 
 resource "aws_athena_named_query" "upgrade_downgrade_count" {
   name = "${local.resource_prefix}-upgrade_downgrade_count"
-  database = aws_athena_database.this.id
+  database = var.athena_db
   workgroup = aws_athena_workgroup.this.name
   query = <<EOF
 SELECT 
