@@ -1,5 +1,5 @@
 resource "aws_iam_role" "code_deploy" {
-  name = "${local.resource_prefix}-AWSCodeDeployServiceRole"
+  name = "${var.resource_prefix}-AWSCodeDeployServiceRole"
 
   assume_role_policy = <<EOF
 {
@@ -46,7 +46,7 @@ resource "aws_iam_policy" "appspec_policy" {
     {
       "Effect": "Allow",
       "Action": "codedeploy:*",
-      "Resource": "arn:aws:codedeploy:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*/${var.client}-${var.project_id}-*"
+      "Resource": "arn:aws:codedeploy:${var.region}:${var.aws_caller_user_id}:*/${var.client}-${var.project_id}-*"
     }
   ]
 }
@@ -69,12 +69,12 @@ resource "aws_iam_policy" "codedeploy_ssm_ps_access" {
     {
       "Effect": "Allow",
       "Action": "ssm:GetParameters",
-      "Resource": "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.client}-${var.project_id}-*"
+      "Resource": "arn:aws:ssm:${var.region}:${var.aws_caller_user_id}:parameter/${var.client}-${var.project_id}-*"
     },
     {
       "Effect": "Allow",
       "Action": "kms:Decrypt",
-      "Resource": "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/aws/ssm"
+      "Resource": "arn:aws:kms:${var.region}:${var.aws_caller_user_id}:alias/aws/ssm"
     }
   ]
 }
@@ -88,11 +88,11 @@ resource "aws_iam_role_policy_attachment" "CodeDeploy-SSM-PS-Read-Access" {
 
 resource "aws_codedeploy_app" "airflow_src" {
   compute_platform = "Server"
-  name             = "${local.resource_prefix}-cd-app"
+  name             = "${var.resource_prefix}-cd-app"
 }
 
 resource "aws_codedeploy_deployment_config" "airflow_src" {
-  deployment_config_name = "${local.resource_prefix}-cd-config"
+  deployment_config_name = "${var.resource_prefix}-cd-config"
 
   minimum_healthy_hosts {
     type  = "HOST_COUNT"
@@ -103,7 +103,7 @@ resource "aws_codedeploy_deployment_config" "airflow_src" {
 
 resource "aws_codedeploy_deployment_group" "deploy_airflow_inplace" {
   app_name               = aws_codedeploy_app.airflow_src.name
-  deployment_group_name  = "${local.resource_prefix}-in-place-cd-group"
+  deployment_group_name  = "${var.resource_prefix}-in-place-cd-group"
   service_role_arn       = aws_iam_role.code_deploy.arn
   deployment_config_name = aws_codedeploy_deployment_config.airflow_src.id
   deployment_style {
@@ -149,7 +149,7 @@ resource "aws_codedeploy_deployment_group" "deploy_airflow_inplace" {
 
 # resource "aws_codedeploy_deployment_group" "deploy_airflow_blue_green" {
 #   app_name               = aws_codedeploy_app.airflow_src.name
-#   deployment_group_name  = "${local.resource_prefix}-blue-green-cd-group"
+#   deployment_group_name  = "${var.resource_prefix}-blue-green-cd-group"
 #   service_role_arn       = aws_iam_role.code_deploy.arn
 #   deployment_config_name = aws_codedeploy_deployment_config.airflow_src.id
   

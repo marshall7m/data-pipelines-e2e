@@ -15,7 +15,7 @@ resource "aws_codebuild_webhook" "tf_pr" {
 }
 
 resource "aws_codebuild_webhook" "tf_merge" {
-  project_name = "${local.resource_prefix}-tf-apply"
+  project_name = aws_codebuild_project.tf_apply.name
 
   filter_group {
     filter {
@@ -33,7 +33,6 @@ resource "aws_codebuild_webhook" "tf_merge" {
       pattern = "^.*[.](tf|tfvars)$"
     }
   }
-  depends_on = [null_resource.tf_apply_batch]
 }
 
 resource "aws_codebuild_webhook" "deploy_airflow_in_place" {
@@ -105,7 +104,7 @@ resource "aws_codebuild_webhook" "airflow_docker_build" {
 }
 
 resource "aws_iam_role" "code_build" {
-  name = "${local.resource_prefix}-AWSCodeBuildServiceRole"
+  name = "${var.resource_prefix}-AWSCodeBuildServiceRole"
 
   assume_role_policy = <<EOF
 {
@@ -125,7 +124,7 @@ EOF
 
 resource "aws_iam_role_policy" "code_build_policy" {
   role   = aws_iam_role.code_build.name
-  name   = "${local.resource_prefix}-AWSCodeBuildServicePolicy"
+  name   = "${var.resource_prefix}-AWSCodeBuildServicePolicy"
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -146,38 +145,44 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:project/${local.resource_prefix}-*",
+      "Resource": "arn:aws:codebuild:${var.region}:${var.aws_caller_user_id}:project/${var.resource_prefix}-*",
       "Action": "codebuild:*"
     },
     {
       "Effect": "Allow",
       "Resource": [
-        "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/CodeBuild/*",
-        "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${local.resource_prefix}-*"
+        "arn:aws:ssm:${var.region}:${var.aws_caller_user_id}:parameter/${var.resource_prefix}-*"
       ],
       "Action": [
         "ssm:GetParameters",
-        "ssm:PutParameter"
+        "ssm:GetParameter",
+        "ssm:PutParameter",
+        "ssm:ListTagsForResource"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Resource": "arn:aws:ssm:${var.region}:${var.aws_caller_user_id}:*",
+      "Action": "ssm:DescribeParameters"
     },
     {
       "Effect": "Allow",
       "Action": [
         "kms:Decrypt"
       ],
-      "Resource": “arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/aws/ssm”
+      "Resource": "arn:aws:kms:${var.region}:${var.aws_caller_user_id}:alias/aws/ssm"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:association/*",
+      "Resource": "arn:aws:ssm:${var.region}:${var.aws_caller_user_id}:association/*",
       "Action": "ssm:DescribeAssociation"
     },
     {
       "Effect": "Allow",
       "Resource":  [
-          "arn:aws:ssm:${data.aws_region.current.name}::document/AWS-UpdateSSMAgent",
-          "arn:aws:ssm:${data.aws_region.current.name}::document/AWS-RunShellScript",
-          "arn:aws:ssm:${data.aws_region.current.name}::document/AWS-ConfigureAWSPackage"
+          "arn:aws:ssm:${var.region}::document/AWS-UpdateSSMAgent",
+          "arn:aws:ssm:${var.region}::document/AWS-RunShellScript",
+          "arn:aws:ssm:${var.region}::document/AWS-ConfigureAWSPackage"
       ],
       "Action": [
           "ssm:GetDocument"
@@ -186,20 +191,20 @@ resource "aws_iam_role_policy" "code_build_policy" {
     {
       "Effect": "Allow",
       "Resource": [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}-*",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy//${local.resource_prefix}-*",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:instance-profile/${local.resource_prefix}-*"
+        "arn:aws:iam::${var.aws_caller_user_id}:role/${var.resource_prefix}-*",
+        "arn:aws:iam::${var.aws_caller_user_id}:policy//${var.resource_prefix}-*",
+        "arn:aws:iam::${var.aws_caller_user_id}:instance-profile/${var.resource_prefix}-*"
       ],
       "Action": "iam:*"
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.client}-*",
+      "Resource": "arn:aws:ecr:${var.region}:${var.aws_caller_user_id}:${var.client}-*",
       "Action": "ecr:*"
     },
     {
     "Effect": "Allow",
-    "Resource": "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/${var.client}-*",
+    "Resource": "arn:aws:ecr:${var.region}:${var.aws_caller_user_id}:repository/${var.client}-*",
     "Action": "ecr:*"
     },
     {
@@ -210,20 +215,20 @@ resource "aws_iam_role_policy" "code_build_policy" {
     {
       "Effect": "Allow",
       "Resource": [
-        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog",
-        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:database/default",
-        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:crawler/${local.resource_prefix}-*",
-        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:job/${local.resource_prefix}-*",
-        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:database/${replace("${local.resource_prefix}-*", "-", "_")}"
+        "arn:aws:glue:${var.region}:${var.aws_caller_user_id}:catalog",
+        "arn:aws:glue:${var.region}:${var.aws_caller_user_id}:database/default",
+        "arn:aws:glue:${var.region}:${var.aws_caller_user_id}:crawler/${var.resource_prefix}-*",
+        "arn:aws:glue:${var.region}:${var.aws_caller_user_id}:job/${var.resource_prefix}-*",
+        "arn:aws:glue:${var.region}:${var.aws_caller_user_id}:database/${replace("${var.resource_prefix}-*", "-", "_")}"
       ],
       "Action": "glue:*"
     },
     {
       "Effect": "Allow",
       "Resource": [
-        "arn:aws:athena:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
-        "arn:aws:athena:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:workgroup/${local.resource_prefix}-*",
-        "arn:aws:athena:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:workgroup/primary"
+        "arn:aws:athena:${var.region}:${var.aws_caller_user_id}:${var.resource_prefix}-*",
+        "arn:aws:athena:${var.region}:${var.aws_caller_user_id}:workgroup/${var.resource_prefix}-*",
+        "arn:aws:athena:${var.region}:${var.aws_caller_user_id}:workgroup/primary"
       ],
       "Action": "athena:*"
     },
@@ -234,7 +239,12 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}-*",
+      "Resource": "*",
+      "Action": "rds:*"
+    },
+    {
+      "Effect": "Allow",
+      "Resource": "arn:aws:ec2:${var.region}:${var.aws_caller_user_id}:${var.resource_prefix}-*",
       "Action": "vpc:*"
     }
   ]
@@ -243,8 +253,80 @@ POLICY
 }
 
 resource "aws_codebuild_project" "tf_validate_plan" {
-  name          = "${local.resource_prefix}-tf-validate-plan"
+  name          = "${var.resource_prefix}-tf-validate-plan"
   description   = "Perform terraform plan and terraform validator"
+  build_timeout = "5"
+  service_role  = aws_iam_role.code_build.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "aws/codebuild/standard:4.0"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
+
+    environment_variable {
+      name  = "TG_ROOT_DIR"
+      value = "deployment"
+    }
+
+    environment_variable {
+      name  = "LIVE_BRANCHES"
+      value = "(dev, prod)"
+    }
+
+    environment_variable {
+      name  = "TERRAFORM_VERSION"
+      value = "0.12.28"
+    }
+
+    environment_variable {
+      name  = "TERRAGRUNT_VERSION"
+      value = "0.25.4"
+    }
+
+    environment_variable {
+      name  = "TF_IN_AUTOMATION"
+      value = "true"
+    }
+
+    environment_variable {
+      name  = "TF_INPUT"
+      value = "false"
+    }
+  }
+
+  logs_config {
+    s3_logs {
+      status   = "ENABLED"
+      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/terraform_validate_plan"
+    }
+  }
+
+  source {
+    type            = "GITHUB"
+    location        = var.github_repo_url
+    git_clone_depth = 1
+
+    # auth {
+    #   type = "OAUTH"
+    # }
+
+    buildspec = "CI_CD/cfg/buildspec_terraform_validate_plan.yml"
+    git_submodules_config {
+      fetch_submodules = false
+    }
+  }
+
+  tags = var.tags
+}
+
+resource "aws_codebuild_project" "tf_apply" {
+  name          = "${var.resource_prefix}-tf-apply"
+  description   = "Perform terraform apply with -auto-approve"
   build_timeout = "5"
   service_role  = aws_iam_role.code_build.arn
 
@@ -285,10 +367,11 @@ resource "aws_codebuild_project" "tf_validate_plan" {
     }
   }
 
+
   logs_config {
     s3_logs {
       status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/terraform_validate_plan"
+      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/terraform_apply"
     }
   }
 
@@ -297,40 +380,19 @@ resource "aws_codebuild_project" "tf_validate_plan" {
     location        = var.github_repo_url
     git_clone_depth = 1
 
-    # auth {
-    #   type = "OAUTH"
-    # }
+    buildspec = "CI_CD/cfg/buildspec_tf_apply.yml"
 
-    buildspec = "CI_CD/cfg/buildspec_terraform_validate_plan.yml"
     git_submodules_config {
       fetch_submodules = false
     }
+
+    # auth {
+    #   type = "OAUTH"
+    # }
   }
 
-  tags = {
-    client     = "${var.client}"
-    project_id = "${var.project_id}"
-    terraform  = "true"
-    service    = "CI"
-    version    = "0.0.1"
-  }
+  tags = var.tags
 }
-
-#workaround until Terraform Codebuild batch resource is available
-resource "null_resource" "tf_apply_batch" {
-
-  provisioner "local-exec" {
-    command = "bash tmp_code_build.sh"
-    interpreter = ["/bin/bash", "-c"]
-    environment = {
-      name = "${local.resource_prefix}-tf-apply"
-      client = var.client
-      project_id = var.project_id
-      service_role_arn = aws_iam_role.code_build.arn
-    }
-  }
-}
-
 
 # resource "aws_codebuild_project" "deploy_airflow_blue_green" {
 #   name          = "deploy_airflow"
@@ -409,7 +471,7 @@ resource "null_resource" "tf_apply_batch" {
 # }
 
 resource "aws_codebuild_project" "deploy_airflow_in_place" {
-  name          = "${local.resource_prefix}-deploy_airflow"
+  name          = "${var.resource_prefix}-deploy_airflow"
   description   = "Triggers CodeDeploy deployment. Add or updates Airflow src in-place within target EC2 instances"
   build_timeout = "5"
   service_role  = aws_iam_role.code_build.arn
@@ -474,17 +536,11 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
     }
   }
 
-  tags = {
-    client     = "${var.client}"
-    project_id = "${var.project_id}"
-    terraform  = "true"
-    service    = "CI"
-    version    = "0.0.1"
-  }
+  tags = var.tags
 }
 
 resource "aws_codebuild_project" "airflow_docker_build" {
-  name          = "${local.resource_prefix}-airflow-build"
+  name          = "${var.resource_prefix}-airflow-build"
   description   = "Compiles DAG dependencies and project DAGs into a Docker image and pushes the image to ECR"
   build_timeout = "5"
   service_role  = aws_iam_role.code_build.arn
@@ -527,17 +583,11 @@ resource "aws_codebuild_project" "airflow_docker_build" {
     }
   }
 
-  tags = {
-    client     = "${var.client}"
-    project_id = "${var.project_id}"
-    terraform  = "true"
-    service    = "CI"
-    version    = "0.0.1"
-  }
+  tags = var.tags
 }
 
 # resource "aws_codebuild_project" "dags_unit_tests" {
-#   name          = "${local.resource_prefix}-airflow-apply"
+#   name          = "${var.resource_prefix}-airflow-apply"
 #   description   = "Perform terraform apply with -auto-approve"
 #   build_timeout = "5"
 #   service_role  = aws_iam_role.code_build.arn
@@ -656,79 +706,3 @@ resource "aws_codebuild_project" "airflow_docker_build" {
 # }
 
 
-### ADD AND UPDATE WHEN TERRAFORM CODEBUILD BATCH PROJECTS COME OUT
-# resource "aws_codebuild_project" "tf_apply" {
-#   name          = "${local.resource_prefix}-tf-apply"
-#   description   = "Perform terraform apply with -auto-approve"
-#   build_timeout = "5"
-#   service_role  = aws_iam_role.code_build.arn
-
-#   artifacts {
-#     type = "NO_ARTIFACTS"
-#   }
-
-#   environment {
-#     compute_type                = "BUILD_GENERAL1_SMALL"
-#     image                       = "aws/codebuild/standard:4.0"
-#     type                        = "LINUX_CONTAINER"
-#     image_pull_credentials_type = "CODEBUILD"
-#     privileged_mode             = true
-
-#     environment_variable {
-#       name  = "TF_ROOT_DIR"
-#       value = "deployment"
-#     }
-
-#     environment_variable {
-#       name  = "LIVE_BRANCHES"
-#       value = "(dev, prod)"
-#     }
-
-#     environment_variable {
-#       name  = "TERRAFORM_VERSION"
-#       value = "0.12.28"
-#     }
-
-#     environment_variable {
-#       name  = "TF_IN_AUTOMATION"
-#       value = "true"
-#     }
-
-#     environment_variable {
-#       name  = "TF_CLI_ARGS"
-#       value = "-input=false"
-#     }
-#   }
-
-
-#   logs_config {
-#     s3_logs {
-#       status   = "ENABLED"
-#       location = "${aws_s3_bucket.private_bucket.id}/CI_CD/terraform_apply"
-#     }
-#   }
-
-#   source {
-#     type            = "GITHUB"
-#     location        = var.github_repo_url
-#     git_clone_depth = 1
-
-#     buildspec = "CI_CD/cfg/buildspec_tf_apply_batch.yml"
-
-#     git_submodules_config {
-#       fetch_submodules = false
-#     }
-
-#     # auth {
-#     #   type = "OAUTH"
-#     # }
-#   }
-
-#   tags = {
-#     client     = "${var.client}"
-#     project_id = "${var.project_id}"
-#     terraform  = "true"
-#     service    = "CI"
-#     version    = "0.0.1"
-#   }
-# }

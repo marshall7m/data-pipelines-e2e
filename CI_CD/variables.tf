@@ -1,20 +1,19 @@
-locals {
-  resource_prefix = "${var.client}-${var.project_id}"
-}
+variable "resource_prefix" {}
 
-variable "github_repo_url" {
-  default = "https://github.com/marshall7m/sparkify_end_to_end.git"
-}
+variable "github_repo_url" {}
 
-variable "client" {
-  default = "sparkify"
-}
+variable "client" {}
 
-variable "project_id" {
-  default = "usr-olap"
-}
+variable "project_id" {}
 
-variable "private_bucket" {
-  default = "private-sparkify"
-}
+variable "region" {}
 
+variable "private_bucket_name" {}
+
+variable "tf_state_bucket_name" {}
+
+variable "aws_caller_user_id" {}
+
+variable "tags" {
+  type = map(string)
+}

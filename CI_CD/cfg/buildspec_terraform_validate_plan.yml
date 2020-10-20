@@ -1,17 +1,37 @@
 version: 0.2
+batch:
+  build-graph:
+    - identifier: networking
+      env:
+        compute-type: BUILD_GENERAL1_SMALL 
+        variables:
+          TF_DIR_PATH_TMPL: "deployment/networking/$BRANCH_NAME"
+    - identifier: data_pipeline
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        variables:
+          TF_ROOT_DIR_TMPL: "deployment/data_pipeline/$BRANCH_NAME"
+          TF_SUB_DIRS: "dags/sparkify_etl, dags/sparkify_analytics"
+            
+      depend-on:
+        - networking
 env:
   shell: bash
+  variables:
+    TERRAFORM_VERSION: 0.12.28
+    TERRAGRUNT_VERSION: 0.25.4
 phases:
   install:
     commands:
       - wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -q
+      - wget https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64 -q
       - unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip && mv terraform /usr/local/bin/
-      # install/incorporate terraform validator? 
+      - unzip terraform_${TERRAGRUNT_VERSION}_amd64.zip && mv terragrunt /usr/local/bin/
   pre_build:
     commands:
       # CodeBuild environment variables
       #   BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
-      #   TF_ROOT_DIR -- Directory within branch ($BRANCH_NAME) that will be iterated through for terraform planning and testing
+      #   TG_ROOT_DIR -- Root deployment directory
       #   LIVE_BRANCHES -- Branches that represent a live cloud environment
       - |
         if [[ -z "${BRANCH_NAME}" ]]; then
@@ -21,34 +41,16 @@ phases:
       - "echo Triggered Branch: $BRANCH_NAME"
       - |
         if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
-          # Iterate only through BRANCH_NAME directory
-          TF_ROOT_DIR=${TF_ROOT_DIR}/*/${BRANCH_NAME}/
+          TG_WORKING_DIRS=$TG_ROOT_DIR/$BRANCH_NAME
         else
-          # Iterate through both dev and prod directories
-          TF_ROOT_DIR=${TF_ROOT_DIR}/*/
+          #iterate through all live branch directories
+          TG_WORKING_DIRS=$TG_ROOT_DIR/*
         fi
-      - "echo Terraform root directory: $TF_ROOT_DIR"
+      - "echo Terragrunt plan-all target directories: $TG_WORKING_DIRS"
   build:
     commands:
       - |
-        for dir in $TF_ROOT_DIR; do
-          #get list of non-hidden directories within $dir/
-          service_dir_list=$(find "${dir}" -type d | grep -v '/\.')
-          for sub_dir in $service_dir_list; do
-            #if $sub_dir contains .tf or .tfvars files
-            if (ls ${sub_dir}/*.tf) > /dev/null 2>&1 || (ls ${sub_dir}/*.tfvars) > /dev/null 2>&1; then
-              cd $sub_dir 
-              echo ""
-              echo "*************** terraform init ******************"
-              echo "******* At directory: ${sub_dir} ********"
-              echo "*************************************************"
-              terraform init || exit 1
-              echo ""
-              echo "*************** terraform plan ******************"
-              echo "******* At directory: ${sub_dir} ********"
-              echo "*************************************************"
-              terraform plan || exit 1
-              cd - > /dev/null 
-            fi
-          done  
-        done 
+        for dir in $TG_WORKING_DIRS; do
+          cd $dir
+          terragrunt plan-all 
+          cd - > /dev/null 
