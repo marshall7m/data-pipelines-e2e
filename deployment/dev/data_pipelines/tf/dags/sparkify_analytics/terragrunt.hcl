@@ -1,12 +1,10 @@
-include {
-  path = find_in_parent_folders()
+dependency "sparkify_etl" {
+    config_path = "${get_terragrunt_dir()}/../sparkify_etl"
+    skip_outputs = true
 }
 
-dependency "sparkify_etl" {
-    config_path = "../sparkify_etl"
-    mock_outputs = {
-        athena_db = "tmp-athena-db"
-    }
+include {
+  path = find_in_parent_folders()
 }
 
 inputs = {

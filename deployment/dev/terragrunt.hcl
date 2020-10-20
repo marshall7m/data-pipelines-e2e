@@ -52,7 +52,7 @@ remote_state {
   backend = "s3"
   generate = {
     path      = "backend.tf"
-    if_exists = "overwrite_terragrunt"
+    if_exists = "overwrite"
   }
   config = {
     bucket = "${dependency.CI_CD.outputs.tf_state_bucket_name}"

@@ -10,7 +10,7 @@ resource "aws_athena_workgroup" "this" {
     enforce_workgroup_configuration =  true
 
     result_configuration {
-      output_location = "s3://${var.private_bucket_name}/data_pipeline/${var.env}/athena_queries/"
+      output_location = "s3://${var.private_bucket_name}/${var.project_id}/${var.env}/data_pipelines/dags/${basename(path.cwd)}/athena_queries/"
     }
   }
 

@@ -1,5 +1,6 @@
 dependency "networking" {
   config_path = "../../../networking"
+  skip_outputs = true
 }
 
 inputs = {

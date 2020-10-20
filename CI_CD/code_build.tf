@@ -252,9 +252,9 @@ resource "aws_iam_role_policy" "code_build_policy" {
 POLICY
 }
 
-resource "aws_codebuild_project" "tf_validate_plan" {
-  name          = "${var.resource_prefix}-tf-validate-plan"
-  description   = "Perform terraform plan and terraform validator"
+resource "aws_codebuild_project" "tf_plan" {
+  name          = "${var.resource_prefix}-tf-plan"
+  description   = "Perform terragrunt plan-all within deployment directory"
   build_timeout = "5"
   service_role  = aws_iam_role.code_build.arn
 
@@ -302,7 +302,7 @@ resource "aws_codebuild_project" "tf_validate_plan" {
   logs_config {
     s3_logs {
       status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/terraform_validate_plan"
+      location = "${aws_s3_bucket.private_bucket.id}/${var.project_id}/CI_CD/logs/CB_tf_plan"
     }
   }
 
@@ -315,7 +315,7 @@ resource "aws_codebuild_project" "tf_validate_plan" {
     #   type = "OAUTH"
     # }
 
-    buildspec = "CI_CD/cfg/buildspec_terraform_validate_plan.yml"
+    buildspec = "CI_CD/cfg/buildspec_tf_plan.yml"
     git_submodules_config {
       fetch_submodules = false
     }
@@ -326,7 +326,7 @@ resource "aws_codebuild_project" "tf_validate_plan" {
 
 resource "aws_codebuild_project" "tf_apply" {
   name          = "${var.resource_prefix}-tf-apply"
-  description   = "Perform terraform apply with -auto-approve"
+  description   = "Perform terragrunt apply-all with auto-approve within deployment directory"
   build_timeout = "5"
   service_role  = aws_iam_role.code_build.arn
 
@@ -342,7 +342,7 @@ resource "aws_codebuild_project" "tf_apply" {
     privileged_mode             = true
 
     environment_variable {
-      name  = "TF_ROOT_DIR"
+      name  = "TG_ROOT_DIR"
       value = "deployment"
     }
 
@@ -357,16 +357,20 @@ resource "aws_codebuild_project" "tf_apply" {
     }
 
     environment_variable {
+      name  = "TERRAGRUNT_VERSION"
+      value = "0.25.4"
+    }
+
+    environment_variable {
       name  = "TF_IN_AUTOMATION"
       value = "true"
     }
 
     environment_variable {
-      name  = "TF_CLI_ARGS"
-      value = "-input=false"
+      name  = "TF_INPUT"
+      value = "false"
     }
   }
-
 
   logs_config {
     s3_logs {
@@ -393,82 +397,6 @@ resource "aws_codebuild_project" "tf_apply" {
 
   tags = var.tags
 }
-
-# resource "aws_codebuild_project" "deploy_airflow_blue_green" {
-#   name          = "deploy_airflow"
-#   description   = "Triggers CodeDeploy deployment to add or update Airflow src within EC2 instances"
-#   build_timeout = "5"
-#   service_role  = aws_iam_role.code_build.arn
-
-#   artifacts {
-#     type = "NO_ARTIFACTS"
-#   }
-
-#   source {
-#     type            = "GITHUB"
-#     location        = var.github_repo_url
-#     git_clone_depth = 1
-
-#     buildspec = "deployment/CI/dev/cfg/buildspec_deploy_airflow.yml"
-
-#     git_submodules_config {
-#       fetch_submodules = false
-#     }
-#   }
-
-#   environment {
-#     compute_type                = "BUILD_GENERAL1_SMALL"
-#     image                       = "aws/codebuild/standard:4.0"
-#     type                        = "LINUX_CONTAINER"
-#     image_pull_credentials_type = "CODEBUILD"
-#     privileged_mode             = true
-
-#     environment_variable {
-#       name  = "APPLICATION_NAME"
-#       value = aws_codedeploy_app.airflow_src.name
-#     }
-
-#     environment_variable {
-#       name  = "BUCKET"
-#       value = aws_s3_bucket.private_bucket.id
-#     }
-
-#     environment_variable {
-#       name  = "DEPLOYMENT_CONFIG_NAME"
-#       value = aws_codedeploy_deployment_config.airflow_src.deployment_config_id
-#     }
-
-#     environment_variable {
-#       name  = "DEPLOYMENT_GROUP_NAME"
-#       value = aws_codedeploy_deployment_group.deploy_airflow_blue_green.id
-#     }
-
-#     environment_variable {
-#       name  = "KEY"
-#       value = "data_pipeline/prod/src/"
-#     }
-
-#     environment_variable {
-#       name  = "SOURCE"
-#       value = "deployment/data_pipeline/prod/src/"
-#     }
-#   }
-
-#   logs_config {
-#     s3_logs {
-#       status   = "ENABLED"
-#       location = "${aws_s3_bucket.private_bucket.id}/CI/dev/deploy_airflow_blue_green/logs"
-#     }
-#   }
-
-#   tags = {
-#     client = "${var.client}"
-#     project_id = "${var.project_id}"
-#     terraform   = "true"
-#     service     = "CI"
-#     version     = "0.0.1"
-#   }
-# }
 
 resource "aws_codebuild_project" "deploy_airflow_in_place" {
   name          = "${var.resource_prefix}-deploy_airflow"
@@ -532,7 +460,7 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
   logs_config {
     s3_logs {
       status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/dev/deploy_airflow_in_place/logs"
+      location = "${aws_s3_bucket.private_bucket.id}/${var.project_id}/CI_CD/dev/deploy_airflow_in_place/logs"
     }
   }
 
@@ -568,7 +496,7 @@ resource "aws_codebuild_project" "airflow_docker_build" {
   logs_config {
     s3_logs {
       status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/docker_build/logs"
+      location = "${aws_s3_bucket.private_bucket.id}/${var.project_id}/CI_CD/docker_build/logs"
     }
   }
 
