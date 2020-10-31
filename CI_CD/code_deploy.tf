@@ -1,5 +1,5 @@
 resource "aws_iam_role" "code_deploy" {
-  name = "${var.resource_prefix}-AWSCodeDeployServiceRole"
+  name = "${var.resource_prefix}-codedeploy-service-role"
 
   assume_role_policy = <<EOF
 {
@@ -88,7 +88,7 @@ resource "aws_iam_role_policy_attachment" "CodeDeploy-SSM-PS-Read-Access" {
 
 resource "aws_codedeploy_app" "airflow_src" {
   compute_platform = "Server"
-  name             = "${var.resource_prefix}-cd-app"
+  name             = var.cd_app_name != null ? var.cd_app_name : local.resource_prefix
 }
 
 resource "aws_codedeploy_deployment_config" "airflow_src" {
@@ -101,9 +101,9 @@ resource "aws_codedeploy_deployment_config" "airflow_src" {
 }
 
 
-resource "aws_codedeploy_deployment_group" "deploy_airflow_inplace" {
+resource "aws_codedeploy_deployment_group" "airflow" {
   app_name               = aws_codedeploy_app.airflow_src.name
-  deployment_group_name  = "${var.resource_prefix}-in-place-cd-group"
+  deployment_group_name  = var.deployment_group_name
   service_role_arn       = aws_iam_role.code_deploy.arn
   deployment_config_name = aws_codedeploy_deployment_config.airflow_src.id
   deployment_style {
@@ -111,33 +111,32 @@ resource "aws_codedeploy_deployment_group" "deploy_airflow_inplace" {
       deployment_type = "IN_PLACE"
   }
 
-  ec2_tag_set {
-    ec2_tag_filter {
-      key   = "environment"
-      type  = "KEY_AND_VALUE"
-      value = "dev"
-    }
-
-    ec2_tag_filter {
-      key   = "environment"
-      type  = "KEY_AND_VALUE"
-      value = "prod"
-    }
-  }
-
-  ec2_tag_set {
-    ec2_tag_filter {
-      key   = "project_id"
-      type  = "KEY_AND_VALUE"
-      value = var.project_id
+  dynamic "ec2_tag_set" {
+    for_each = var.ec2_tag_set_list != null ? toset(var.ec2_tag_set_list) : 0
+    dynamic "ec2_tag_filter" {
+      for_each = ec2_tag_set.value
+      content = {
+        key = ec2_tag_filter.value.key
+        type = coalesce(
+          "${ec2_tag_filter.value.key != null && ec2_tag_filter.value.value != null ? "KEY_AND_VALUE" : null}",
+          "${ec2_tag_filter.value.key != null && ec2_tag_filter.value.value == null ? "KEY_ONLY" : null}",
+          "${ec2_tag_filter.value.key == null && ec2_tag_filter.value.value != null ? "VALUE_ONLY" : null}"
+        )
+        value = ec2_tag_filter.value.value
+      }
     }
   }
 
-    ec2_tag_set {
-    ec2_tag_filter {
-      key   = "client"
-      type  = "KEY_AND_VALUE"
-      value = var.client
+  dynamic "ec2_tag_filter" {
+    for_each = var.ec2_tag_filters != null ? var.ec2_tag_filters : 0
+    content = {
+      key = each.value.key
+      type = coalesce(
+        "${ec2_tag_filter.value.key != null && ec2_tag_filter.value.value != null ? "KEY_AND_VALUE" : null}",
+        "${ec2_tag_filter.value.key != null && ec2_tag_filter.value.value == null ? "KEY_ONLY" : null}",
+        "${ec2_tag_filter.value.key == null && ec2_tag_filter.value.value != null ? "VALUE_ONLY" : null}"
+      )
+      value = each.value.value
     }
   }
 

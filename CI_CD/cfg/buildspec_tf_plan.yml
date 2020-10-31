@@ -15,28 +15,30 @@ phases:
       # CodeBuild environment variables
       #   BRANCH_NAME -- GitHub branch that triggered the CodeBuild project
       #   TG_ROOT_DIR -- Root deployment directory
+      #   LIVE_BRANCHES -- Branches that represent a live cloud environment
       - |
         if [[ -z "${BRANCH_NAME}" ]]; then
           # extract branch from github webhook
           BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
         fi
       - "echo Triggered Branch: $BRANCH_NAME"
-      - TG_WORKING_DIR=$TG_ROOT_DIR/$BRANCH_NAME
-      - "echo Terragrunt apply-all target directory: $TG_WORKING_DIR"
+      - |
+        if [[ " ${LIVE_BRANCHES[*]} " == *"$BRANCH_NAME"* ]]; then
+          TG_WORKING_DIRS=$TG_ROOT_DIR/$BRANCH_NAME
+        else
+          #iterate through all live branch directories
+          TG_WORKING_DIRS=$TG_ROOT_DIR/*/
+        fi
+      - "echo Terragrunt plan-all target directories: $TG_WORKING_DIRS"
   build:
     commands:
       - |
-        if [ -d "$TG_WORKING_DIR" ]; then
-          cd $TG_WORKING_DIR   
+        for dir in $TG_WORKING_DIRS; do
+          cd $dir
           echo ""
-          echo "*************** terragrunt apply-all ******************"
-          echo "******* At directory: ${TG_WORKING_DIR} ********"
+          echo "*************** terragrunt plan-all ******************"
+          echo "******* At directory: ${dir} ********"
           echo "*************************************************"
-          terragrunt apply-all || exit 1
-        else
-          echo ""
-          echo "*************** SKIPPING terragrunt apply-all ******************"
-          echo "******* ${TG_WORKING_DIR} directory is not in the source repo: ${CODEBUILD_SRC_DIR} ********"
-          echo "*************************************************"
-          exit 1
-        fi
+          terragrunt plan-all || exit 1
+          cd - > /dev/null 
+        done

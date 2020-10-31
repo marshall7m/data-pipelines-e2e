@@ -1,15 +1,17 @@
-resource "aws_codebuild_webhook" "tf_pr" {
-  project_name = aws_codebuild_project.tf_validate_plan.name
+resource "aws_codebuild_webhook" "tf_pull_request" {
+  project_name = aws_codebuild_project.tf_plan.name
 
   filter_group {
     filter {
       type    = "EVENT"
       pattern = "PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED"
+      # pattern = "PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED"
+
     }
 
     filter {
       type    = "FILE_PATH"
-      pattern = "^.*[.](tf|tfvars)$"
+      pattern = "^${var.deployment_directory}.*[.](tf|tfvars)$"
     }
   }
 }
@@ -25,12 +27,12 @@ resource "aws_codebuild_webhook" "tf_merge" {
 
     filter {
       type    = "BASE_REF"
-      pattern = "^refs\\/heads\\/(dev|prod)$"
+      pattern = "^refs\\/heads\\/(${var.env})$"
     }
 
     filter {
       type    = "FILE_PATH"
-      pattern = "^.*[.](tf|tfvars)$"
+      pattern = "^${var.deployment_directory}.*[.](tf|tfvars)$"
     }
   }
 }
@@ -51,31 +53,10 @@ resource "aws_codebuild_webhook" "deploy_airflow_in_place" {
 
     filter {
       type    = "FILE_PATH"
-      pattern = "^.*\\/data_pipeline\\/dev\\/src\\/.*"
+      pattern = "^${var.airflow_deployment_directory}\\/.*"
     }
   }
 }
-
-# resource "aws_codebuild_webhook" "deploy_airflow_blue_green" {
-#   project_name = aws_codebuild_project.deploy_airflow_blue_green.name
-
-#   filter_group {
-#     filter {
-#       type    = "EVENT"
-#       pattern = "PULL_REQUEST_MERGED"
-#     }
-
-#     filter {
-#       type    = "BASE_REF"
-#       pattern = "^refs\\/heads\\/prod$"
-#     }
-
-#     filter {
-#       type    = "FILE_PATH"
-#       pattern = "^.*\\/data_pipeline\\/dev\\/src\\/.*"
-#     }
-#   }
-# }
 
 resource "aws_codebuild_webhook" "airflow_docker_build" {
   project_name = aws_codebuild_project.airflow_docker_build.name
@@ -88,23 +69,24 @@ resource "aws_codebuild_webhook" "airflow_docker_build" {
 
     filter {
       type    = "BASE_REF"
-      pattern = "^refs\\/heads\\/(dev|prod)$"
+      pattern = "^refs\\/heads\\/(${var.env})$"
     }
 
     filter {
       type    = "FILE_PATH"
-      pattern = "^deployment\\/data_pipeline\\/.+build\\.sh$"
+      pattern = "^${var.airflow_deployment_directory}\\/.+build\\.sh$"
     }
 
     filter {
       type    = "FILE_PATH"
-      pattern = "^deployment\\/data_pipeline\\/.+Dockerfile$"
+      pattern = "^${var.airflow_deployment_directory}\\/.+Dockerfile$"
     }
   }
 }
 
 resource "aws_iam_role" "code_build" {
-  name = "${var.resource_prefix}-AWSCodeBuildServiceRole"
+  count = var.create_codebuild_iam_role ? 1 : 0 
+  name = "${var.resource_prefix}-codebuild-service-role"
 
   assume_role_policy = <<EOF
 {
@@ -123,8 +105,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "code_build_policy" {
+  count = var.create_codebuild_iam_role ? 1 : 0 
   role   = aws_iam_role.code_build.name
-  name   = "${var.resource_prefix}-AWSCodeBuildServicePolicy"
+  name   = "${var.resource_prefix}-codebuild-service-policy"
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -199,12 +182,12 @@ resource "aws_iam_role_policy" "code_build_policy" {
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:ecr:${var.region}:${var.aws_caller_user_id}:${var.client}-*",
+      "Resource": "arn:aws:ecr:${var.region}:${var.aws_caller_user_id}:${var.resource_prefix}-*",
       "Action": "ecr:*"
     },
     {
     "Effect": "Allow",
-    "Resource": "arn:aws:ecr:${var.region}:${var.aws_caller_user_id}:repository/${var.client}-*",
+    "Resource": "arn:aws:ecr:${var.region}:${var.aws_caller_user_id}:repository/${var.resource_prefix}-*",
     "Action": "ecr:*"
     },
     {
@@ -253,10 +236,11 @@ POLICY
 }
 
 resource "aws_codebuild_project" "tf_plan" {
+  count = var.create_codebuild_terraform_plan_project == true ? 1 : 0
   name          = "${var.resource_prefix}-tf-plan"
   description   = "Perform terragrunt plan-all within deployment directory"
   build_timeout = "5"
-  service_role  = aws_iam_role.code_build.arn
+  service_role  = var.codebuild_service_role_arn != null ? var.codebuild_service_role_arn : aws_iam_role.code_build[0].arn
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -270,22 +254,17 @@ resource "aws_codebuild_project" "tf_plan" {
 
     environment_variable {
       name  = "TG_ROOT_DIR"
-      value = "deployment"
-    }
-
-    environment_variable {
-      name  = "LIVE_BRANCHES"
-      value = "(dev, prod)"
+      value = var.airflow_deployment_directory
     }
 
     environment_variable {
       name  = "TERRAFORM_VERSION"
-      value = "0.12.28"
+      value = var.terraform_version
     }
 
     environment_variable {
       name  = "TERRAGRUNT_VERSION"
-      value = "0.25.4"
+      value = var.terragrunt_version
     }
 
     environment_variable {
@@ -298,11 +277,14 @@ resource "aws_codebuild_project" "tf_plan" {
       value = "false"
     }
   }
-
-  logs_config {
-    s3_logs {
-      status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/${var.project_id}/CI_CD/logs/CB_tf_plan"
+  
+  dynamic "logs_config" {
+    count = var.codebuild_terraform_plan_project_s3_log_path != null ? 1 : 0
+    content {
+      s3_logs {
+        status   = "ENABLED"
+        location = var.codebuild_terraform_plan_project_s3_log_path
+      }
     }
   }
 
@@ -311,11 +293,8 @@ resource "aws_codebuild_project" "tf_plan" {
     location        = var.github_repo_url
     git_clone_depth = 1
 
-    # auth {
-    #   type = "OAUTH"
-    # }
+    buildspec = var.codebuild_terraform_plan_project_buildspec
 
-    buildspec = "CI_CD/cfg/buildspec_tf_plan.yml"
     git_submodules_config {
       fetch_submodules = false
     }
@@ -325,10 +304,11 @@ resource "aws_codebuild_project" "tf_plan" {
 }
 
 resource "aws_codebuild_project" "tf_apply" {
+  count = var.create_codebuild_terraform_apply_project == true ? 1 : 0
   name          = "${var.resource_prefix}-tf-apply"
   description   = "Perform terragrunt apply-all with auto-approve within deployment directory"
   build_timeout = "5"
-  service_role  = aws_iam_role.code_build.arn
+  service_role  = var.codebuild_service_role_arn != null ? var.codebuild_service_role_arn : aws_iam_role.code_build[0].arn
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -343,22 +323,17 @@ resource "aws_codebuild_project" "tf_apply" {
 
     environment_variable {
       name  = "TG_ROOT_DIR"
-      value = "deployment"
-    }
-
-    environment_variable {
-      name  = "LIVE_BRANCHES"
-      value = "(dev, prod)"
+      value = var.airflow_deployment_directory
     }
 
     environment_variable {
       name  = "TERRAFORM_VERSION"
-      value = "0.12.28"
+      value = var.terraform_version
     }
 
     environment_variable {
       name  = "TERRAGRUNT_VERSION"
-      value = "0.25.4"
+      value = var.terragrunt_version
     }
 
     environment_variable {
@@ -371,11 +346,14 @@ resource "aws_codebuild_project" "tf_apply" {
       value = "false"
     }
   }
-
-  logs_config {
-    s3_logs {
-      status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/CI_CD/terraform_apply"
+  
+  dynamic "logs_config" {
+    count = var.codebuild_terraform_apply_project_s3_log_path != null ? 1 : 0
+    content {
+      s3_logs {
+        status   = "ENABLED"
+        location = var.codebuild_terraform_apply_project_s3_log_path
+      }
     }
   }
 
@@ -384,15 +362,11 @@ resource "aws_codebuild_project" "tf_apply" {
     location        = var.github_repo_url
     git_clone_depth = 1
 
-    buildspec = "CI_CD/cfg/buildspec_tf_apply.yml"
+    buildspec = var.codebuild_terraform_apply_project_buildspec
 
     git_submodules_config {
       fetch_submodules = false
     }
-
-    # auth {
-    #   type = "OAUTH"
-    # }
   }
 
   tags = var.tags
@@ -402,7 +376,7 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
   name          = "${var.resource_prefix}-deploy_airflow"
   description   = "Triggers CodeDeploy deployment. Add or updates Airflow src in-place within target EC2 instances"
   build_timeout = "5"
-  service_role  = aws_iam_role.code_build.arn
+  service_role  = var.codebuild_service_role_arn != null ? var.codebuild_service_role_arn : aws_iam_role.code_build[0].arn
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -412,7 +386,7 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
     location        = var.github_repo_url
     git_clone_depth = 1
 
-    buildspec = "CI_CD/cfg/buildspec_deploy_airflow.yml"
+    buildspec = var.codebuild_airflow_deployment_buildspec
 
     git_submodules_config {
       fetch_submodules = false
@@ -438,29 +412,32 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
 
     environment_variable {
       name  = "DEPLOYMENT_CONFIG_NAME"
-      value = aws_codedeploy_deployment_config.airflow_src.deployment_config_name
+      value = aws_codedeploy_deployment_config.airflow.deployment_config_name
     }
 
     environment_variable {
       name  = "DEPLOYMENT_GROUP_NAME"
-      value = aws_codedeploy_deployment_group.deploy_airflow_inplace.deployment_group_name
+      value = aws_codedeploy_deployment_group.airflow.deployment_group_name
     }
 
     environment_variable {
       name  = "KEY"
-      value = "data_pipeline/dev/src/"
+      value = var.airflow_deployment_s3_key
     }
 
     environment_variable {
       name  = "SOURCE"
-      value = "deployment/data_pipeline/dev/"
+      value = var.deployment_directory
     }
   }
 
-  logs_config {
-    s3_logs {
-      status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/${var.project_id}/CI_CD/dev/deploy_airflow_in_place/logs"
+  dynamic "logs_config" {
+    count = var.codebuild_airflow_deployment_project_s3_log_path != null ? 1 : 0
+    content {
+      s3_logs {
+        status   = "ENABLED"
+        location = var.codebuild_airflow_deployment_project_s3_log_path
+      }
     }
   }
 
@@ -469,7 +446,7 @@ resource "aws_codebuild_project" "deploy_airflow_in_place" {
 
 resource "aws_codebuild_project" "airflow_docker_build" {
   name          = "${var.resource_prefix}-airflow-build"
-  description   = "Compiles DAG dependencies and project DAGs into a Docker image and pushes the image to ECR"
+  description   = "Builds Airflow deployment image and pushes the image to ECR"
   build_timeout = "5"
   service_role  = aws_iam_role.code_build.arn
 
@@ -489,14 +466,17 @@ resource "aws_codebuild_project" "airflow_docker_build" {
 
     environment_variable {
       name  = "ECR_REPO_URL"
-      value = aws_ecr_repository.airflow_local.repository_url
+      value = aws_ecr_repository.airflow.repository_url
     }
   }
 
-  logs_config {
-    s3_logs {
-      status   = "ENABLED"
-      location = "${aws_s3_bucket.private_bucket.id}/${var.project_id}/CI_CD/docker_build/logs"
+  dynamic "logs_config" {
+    count = var.codebuild_airflow_deployment_project_s3_log_path != null ? 1 : 0
+    content {
+      s3_logs {
+        status   = "ENABLED"
+        location = var.codebuild_airflow_deployment_project_s3_log_path
+      }
     }
   }
 
@@ -505,7 +485,7 @@ resource "aws_codebuild_project" "airflow_docker_build" {
     location        = var.github_repo_url
     git_clone_depth = 1
 
-    buildspec = "CI_CD/cfg/buildspec_docker_build.yml"
+    buildspec = var.codebuild_airflow_deployment_project_buildspec
     git_submodules_config {
       fetch_submodules = false
     }
@@ -566,70 +546,6 @@ resource "aws_codebuild_project" "airflow_docker_build" {
 #     terraform  = "true"
 #     service    = "CI"
 #     version    = "0.0.1"
-#   }
-# }
-
-# resource "aws_codebuild_project" "airflow_batch_build" {
-#   name          = "airflow_batch_build"
-#   description   = "Compiles Airflow from source, DAG dependencies and project DAGs into a Docker image and pushes the image to ECR"
-#   build_timeout = "5"
-#   service_role  = aws_iam_role.code_build.arn
-
-# artifacts {
-#   type = "NO_ARTIFACTS"
-# }
-#   cache {
-#     type  = "LOCAL"
-#     modes = ["LOCAL_DOCKER_LAYER_CACHE"]
-#   }
-#   environment {
-#     compute_type                = "BUILD_GENERAL1_SMALL"
-#     image                       = "aws/codebuild/standard:4.0"
-#     type                        = "LINUX_CONTAINER"
-#     image_pull_credentials_type = "CODEBUILD"
-#     privileged_mode             = true
-
-#     environment_variable {
-#       name  = "ECR_REPO_URL"
-#       value = aws_ecr_repository.main.repository_url
-#     }
-
-#     environment_variable {
-#       name  = "IMAGE_REPO_NAME"
-#       value = aws_ecr_repository.main.name
-#     }
-
-#     environment_variable {
-#       name  = "IMAGE_TAG"
-#       value = "latest"
-#     }
-#   }
-
-#   logs_config {
-#     s3_logs {
-#       status   = "ENABLED"
-#       location = "${aws_s3_bucket.private_bucket.id}/CI/dev/docker_build/logs"
-#     }
-#   }
-
-#   source {
-#     type            = "GITHUB"
-#     location        = var.github_repo_url
-#     git_clone_depth = 1
-
-#     buildspec = "deployment/CI/dev/cfg/buildspec_airflow_batch.yml"
-#     git_submodules_config {
-#       fetch_submodules = false
-#     }
-#   }
-
-#   tags = {
-#     client = "${var.client}"
-#     project_id = "${var.project_id}"
-#     environment = "${var.env}"
-#     terraform   = "true"
-#     service     = "CI"
-#     version     = "0.0.1"
 #   }
 # }
 

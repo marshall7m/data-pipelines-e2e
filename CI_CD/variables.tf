@@ -1,3 +1,6 @@
+locals {
+  resource_prefix = var.resource_prefix != null ? var.resource_prefix : var.deployment_group_name
+}
 variable "resource_prefix" {}
 
 variable "github_repo_url" {}

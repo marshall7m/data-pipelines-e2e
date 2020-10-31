@@ -14,6 +14,10 @@ output "ecr_repo_url" {
   value = "${aws_ecr_repository.airflow_local.repository_url}"
 }
 
+output "cd_deployment_group_name" {
+  value = "${aws_codedeploy_deployment_group.airflow.deployment_group_name}"
+}
+
 output "private_bucket_name" {
   value = "${aws_s3_bucket.private_bucket.id}"
 }

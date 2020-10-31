@@ -1,6 +1,5 @@
 locals {
-    client = "sparkify"
-    project_id = "usr-olap"
+    organization = "demo-data-pipeline-ecosystem"
     tf_state_bucket = "private-sparkify"
     private_bucket = "private-sparkify"
 }
