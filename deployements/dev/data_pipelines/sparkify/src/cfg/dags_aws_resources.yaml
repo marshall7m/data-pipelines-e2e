@@ -1,0 +1,15 @@
+sparkify_analytics:
+  task_resource_count: {}
+  task_resources: {}
+sparkify_etl:
+  task_resource_count:
+    crawl_parquet_sources: 1
+    crawl_raw_sources: 1
+    process_raw_glue_job: 1
+  task_resources:
+    crawl_parquet_sources:
+      - sparkify-usr-olap-dev-glue-crawler-parquet
+    crawl_raw_sources:
+      - sparkify-usr-olap-dev-glue-crawler-raw
+    process_raw_glue_job:
+      - sparkify-usr-olap-dev-glue-job-process-raw

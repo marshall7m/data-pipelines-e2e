@@ -1,0 +1,21 @@
+
+default_args: &sparkify_default_args
+    owner: sparkify
+    environment: dev   
+    aws_conn_id: aws_credentials
+    region: us-west-2 
+    retries: 0
+    retry_delay: 5
+    email_on_retry: False
+    depends_on_past: True
+    wait_for_downstream: True
+    catchup: False
+dags:
+    sparkify_etl:
+        dag_id: sparkify_etl
+        description: ETL pipeline for sparkify user data
+        schedule_interval: '@daily'
+        start_date: 2018-11-11T00:00:00Z
+        end_date: 2018-11-11T00:00:00Z
+        max_active_runs: 1
+        default_args: *sparkify_default_args

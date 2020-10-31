@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+    webserver:
+        # image: "${REPO_URL}:${IMG_TAG}"
+        image: airflow_test:latest
+        entrypoint: /opt/airflow/scripts/entrypoint.sh
+        environment:
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN
+            - AIRFLOW__CORE__FERNET_KEY
+        volumes:
+            - ./dags:/opt/airflow/dags
+            - ./plugins:/opt/airflow/plugins
+            - ./cfg:/opt/airflow/cfg
+            - ./scripts:/opt/airflows/scripts
+        ports:
+            - "8080:8080"
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f $AIRFLOW_HOME/airflow-webserver.pid ]"]
+            interval: 30s
+            timeout: 30s
+            retries: 3
+        command: webserver
+    
