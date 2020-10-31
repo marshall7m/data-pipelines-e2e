@@ -1,1 +1,0 @@
-variable "athena_db" {}
