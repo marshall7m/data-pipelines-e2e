@@ -12,8 +12,14 @@ variable "customer_actions" {
 variable "deployment_access_tags" {
     default = {
         "aws:PrincipalTag/deployment_name" = [
-            "deployment_one"
+            "aws:ResourceTag/deployment_name"
         ]
+    }
+}
+
+variable "environment_access_tags" {
+    default = {
+        "aws:PrincipalTag/environment" = "aws:ResourceTag/environment"
     }
 }
 
@@ -25,12 +31,46 @@ variable "customer_access_tags" {
 
 variable "full_access_actions" {
     default = [
+        "vpc:*",
         "glue:*",
         "athena:*",
         "redshift:*",
         "rds:*",
         "logs:*",
-        "kms:*"
+        "kms:*",
+        "codebuild:*",
+        "ec2:*",
+        "ecr:*",
+        "codedeploy:*",
+        "ssm:GetDocument",
+        "ssm:DescribeAssociation",
+    ]
+}
+
+variable "code_build_actions" {
+    default = [
+        "vpc:*",
+        "glue:*",
+        "athena:*",
+        "redshift:*",
+        "rds:*",
+        "logs:*",
+        "kms:*",
+        "ec2:*",
+        "ecr:*",
+        "s3:*",
+        "codebuild:*",
+        "codedeploy:*",
+        "ecr:*",
+        "ssm:GetParameters",
+        "ssm:GetParameter",
+        "ssm:PutParameter",
+        "ssm:ListTagsForResource",
+        "ssm:GetDocument",
+        "ssm:DescribeAssociation",
+        "iam:PassRole",
+        "iam:GetInstanceProfile"
+
     ]
 }
 
@@ -54,6 +94,7 @@ variable "read_access_actions" {
         "kms:List*",
         "kms:Get*",
         "kms:Describe*",
+        "kms:Decrypt",
         "iam:List*",
         "iam:Get*",
         "iam:Generate*",
@@ -130,5 +171,19 @@ variable "read_access_actions" {
         "athena:List*",
         "athena:Get*",
         "athena:Batch*"
+    ]
+}
+
+variable "airflow_instance_actions" {
+    default = [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "s3:GetObject",
+        "s3:PutObject"
     ]
 }
