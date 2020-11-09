@@ -1,108 +1,76 @@
-module "iam_assumable_role_customers" {
+module "admin_access_roles" {
+  for_each = toset(local.aws_provider_aliases)
   source = "github.com/terraform-aws-modules/terraform-aws-iam/modules/iam-assumable-role"
 
-  role_name = "customer-read-access-role"
+  role_name = "${var.org}-admin-access"
 
-  trusted_role_arns = [module.dag_customers.this_iam_user_arn]
   trusted_role_actions = [
       "sts:AssumeRole"
   ]
-  
+  custom_role_policy_arns = [aws_iam_policy.codebuild_terraform[each.value].arn]
   create_role = true
-
-  custom_role_policy_arns = [
-    aws_iam_policy.customers.arn
-  ]
-
-  number_of_custom_role_policy_arns = 1
-  
+  attach_admin_policy = true
   role_requires_mfa = false
 
   tags = {
-    Role = "customer-access"
+    Role = "admin-access"
+  }
+  
+  providers = {
+    aws = each.value
   }
 }
 
-module "iam_assumable_role_lead_developers" {
-  source = "github.com/terraform-aws-modules/terraform-aws-iam/modules/iam-assumable-role"
+# module "dev_read_access_roles" {
+#   source = "github.com/terraform-aws-modules/terraform-aws-iam/modules/iam-assumable-role"
 
-  role_name = "lead-developers-deployment-role"
+#   role_name = "${var.org}-read-access"
 
-  trusted_role_arns = [module.dag_customers.this_iam_user_arn]
-  trusted_role_actions = [
-      "sts:AssumeRole"
-  ]
+#   trusted_role_actions = [
+#       "sts:AssumeRole"
+#   ]
   
-  create_role = true
+#   create_role = true
+#   attach_readonly_policy = true  
+#   role_requires_mfa = false
 
-  custom_role_policy_arns = [
-    aws_iam_policy.lead_developers.arn
-  ]
+#   tags = {
+#     Role = "${var.org}-read-access"
+#   }
+# }
 
-  number_of_custom_role_policy_arns = 1
+# module "staging_full_access_role" {
+#   source = "github.com/terraform-aws-modules/terraform-aws-iam/modules/iam-assumable-roles"
+
+#   role_name = "${var.org}-full-access-developer"
+
+#   trusted_role_actions = [
+#       "sts:AssumeRole"
+#   ]
   
-  role_requires_mfa = false
+#   create_role = true
+#   attach_poweruser_policy = true
+#   role_requires_mfa = false
 
-  tags = {
-    Role = "lead-developer-access"
-  }
-}
+#   tags = {
+#     Role = "full-access-developer"
+#   }
+# }
 
-module "iam_assumable_role_developers" {
-  source = "github.com/terraform-aws-modules/terraform-aws-iam/modules/iam-assumable-role"
+# module "prod_full_access_role" {
+#   source = "github.com/terraform-aws-modules/terraform-aws-iam/modules/iam-assumable-roles"
 
-  role_name = "developers-deployment-role"
+#   role_name = "${var.org}-full-access-developer"
 
-  trusted_role_arns = [module.dag_customers.this_iam_user_arn]
-  trusted_role_actions = [
-      "sts:AssumeRole"
-  ]
+#   trusted_role_actions = [
+#       "sts:AssumeRole"
+#   ]
   
-  
+#   create_role = true
+#   attach_poweruser_policy = true
+#   role_requires_mfa = false
 
-  custom_role_policy_arns = [
-    aws_iam_policy.developers.arn
-  ]
-
-  create_role = true
-  number_of_custom_role_policy_arns = 1
-  role_requires_mfa = false
-
-  tags = {
-    Role = "developer-access"
-  }
-}
-
-module "iam_assumable_role_airflow_instances" {
-  source = "github.com/terraform-aws-modules/terraform-aws-iam/modules/iam-assumable-role"
-  role_name = "airflow-ec2-role"
-  trusted_role_services = ["ec2.amazonaws.com"]
-  create_instance_profile = true
-
-  create_role = true
-  number_of_custom_role_policy_arns = 2
-  role_requires_mfa = false
-
-  custom_role_policy_arns = [
-    aws_iam_policy.ssm_managed_core.arn,
-    aws_iam_policy.instance_ssm_access.arn,
-  ]
-}
-
-module "iam_assumable_role_codebuild" {
-  # for_each = toset(local.aws_provider_aliases)
-  source = "github.com/terraform-aws-modules/terraform-aws-iam/modules/iam-assumable-role"
-  role_name = "codebuild-role"
-  trusted_role_services = ["codebuild.amazonaws.com"]
-
-  custom_role_policy_arns = [
-    aws_iam_policy.codebuild_terraform.arn
-  ]
-
-  create_role = true
-  number_of_custom_role_policy_arns = 1
-  role_requires_mfa = false
-  # providers = {
-  #   aws = each.value
-  # }
-}
+#   tags = {
+#     Role = "full-access-developer"
+#   }
+# }

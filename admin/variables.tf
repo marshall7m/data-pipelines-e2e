@@ -1,32 +1,25 @@
-variable "customer_list" {
-    default = ["test-user"]
-}
+# variable "deployment_access_tags" {
+#     default = {
+#         "aws:PrincipalTag/deployment_name" = [
+#             "aws:ResourceTag/deployment_name"
+#         ]
+#     }
+# }
 
-variable "customer_actions" {
+# variable "environment_access_tags" {
+#     default = {
+#         "aws:PrincipalTag/environment" = "aws:ResourceTag/environment"
+#     }
+# }
+
+variable "data_engineer_usernames" {
     default = [
-        "s3:Get*",
-        "s3:List*"
+        "test-user"
     ]
 }
 
-variable "deployment_access_tags" {
-    default = {
-        "aws:PrincipalTag/deployment_name" = [
-            "aws:ResourceTag/deployment_name"
-        ]
-    }
-}
-
-variable "environment_access_tags" {
-    default = {
-        "aws:PrincipalTag/environment" = "aws:ResourceTag/environment"
-    }
-}
-
-variable "customer_access_tags" {
-    default = {
-        "aws:PrincipalTag/access_customer" = ["aws:ResourceTag/access-customer"]
-    }
+variable "org" {
+    default = "demo-org"
 }
 
 variable "full_access_actions" {
@@ -44,6 +37,11 @@ variable "full_access_actions" {
         "codedeploy:*",
         "ssm:GetDocument",
         "ssm:DescribeAssociation",
+        "ssm:GetParameters",
+        "ssm:GetParameter",
+        "ssm:PutParameter",
+        "ssm:ListTagsForResource",
+        "ssm:DescribeParameters"
     ]
 }
 
