@@ -2,7 +2,7 @@
 terraform {
   backend "s3" {
     bucket = "private-demo-org"
-    key    = "admin/./tf-state/terraform.tfstate"
+    key    = "admin/dev/tf-state/terraform.tfstate"
     region = "us-west-2"
   }
 }
