@@ -1,5 +1,6 @@
 .terraform
 .terraform-cache
+.terragrunt-cache
 terraform.tfstate.backup
 terraform.tfstate
 .env
