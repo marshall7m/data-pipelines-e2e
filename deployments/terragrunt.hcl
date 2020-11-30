@@ -1,28 +1,19 @@
 locals {
-  account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl", "null.hcl"), "null.hcl")
+  organization_vars = read_terragrunt_config(find_in_parent_folders("org.hcl"))
+  account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
   region_vars = read_terragrunt_config(find_in_parent_folders("region.hcl", "null.hcl"), "null.hcl")
   environment_vars = read_terragrunt_config(find_in_parent_folders("env.hcl", "null.hcl"), "null.hcl")
   deployment_vars = read_terragrunt_config(find_in_parent_folders("deployment.hcl", "null.hcl"), "null.hcl")
   
-  aws_account_name = local.account_vars.locals.aws_account_name
-  aws_account_id   = local.account_vars.locals.aws_account_id
-  aws_codebuild_arn = local.account_vars.locals.aws_codebuild_arn
-  aws_region   = "us-west-2"
-  
-  org = "demo-org"
-}
+  org = local.organization_vars.locals.org
 
-generate "global_variables" {
-  path      = "global_variables.tf"
-  if_exists = "overwrite_terragrunt"
-  contents  = <<EOF
-variable "common_tags" {
-  default = {
+  aws_region = try(local.region_vars.locals.aws_region, "us-west-2")
+
+  common_tags = {
     terragrunt_path = "${path_relative_to_include()}"
     organization = "${local.org}"
-  }
-}
-EOF
+  }  
+  
 }
 
 generate "provider" {
@@ -49,8 +40,6 @@ remote_state {
   }
 }
 
-inputs = merge(
-  local.account_vars.locals,
-  local.region_vars.locals,
-  local.environment_vars.locals
-)
+inputs = {
+  common_tags = local.common_tags
+}
