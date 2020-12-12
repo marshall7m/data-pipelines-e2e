@@ -1,3 +1,4 @@
+org.hcl
 .terraform
 .terraform-cache
 .terragrunt-cache
