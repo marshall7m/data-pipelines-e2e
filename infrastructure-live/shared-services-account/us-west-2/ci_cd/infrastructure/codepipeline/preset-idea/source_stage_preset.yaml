@@ -1,0 +1,11 @@
+- name: ${resource_prefix}-${branch_name}-source
+  category: Source
+  owner: AWS
+  provider: CodeStarSourceConnection
+  version: 1
+  output_artifacts:
+    - ${branch_name}-source-output
+  configuration:
+    ConnectionArn: ${codestar_conn_arn}
+    FullRepositoryId: ${repo_id}
+    BranchName: ${branch_name}

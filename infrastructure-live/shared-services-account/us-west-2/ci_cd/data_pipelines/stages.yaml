@@ -1,0 +1,44 @@
+- name: source
+  actions:
+    - name: ${branch_name}-source
+      category: Source
+      owner: AWS
+      provider: CodeStarSourceConnection
+      version: 1
+      output_artifacts:
+        - ${branch_name}
+      configuration:
+        ConnectionArn: ${codestar_conn_arn}
+        FullRepositoryId: ${repo_id}
+        BranchName: ${branch_name}
+
+- name: tests
+  actions:
+    - name: validate
+      category: Test
+      owner: AWS
+      provider: CodeBuild
+      version: 1
+      input_artifacts: 
+        - ${branch_name}
+      configuration:
+        ProjectName: ${project_name}
+        EnvironmentVariables: 
+      run_order: 1
+    - name: tf-manual-approval
+      category: Approval
+      owner: AWS
+      provider: Manual
+      version: 1
+      run_order: 2
+     - name: publish-to-s3
+      category: Build
+      owner: AWS
+      provider: CodeBuild
+      version: 1
+      input_artifacts: 
+        - ${branch_name}
+      configuration:
+        ProjectName: ${project_name}
+        EnvironmentVariables: 
+      run_order: 3

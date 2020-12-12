@@ -1,0 +1,85 @@
+- name: ${resource_prefix}-tf-validate
+  category: Test
+  owner: AWS
+  provider: CodeBuild
+  version: 1
+  input_artifacts: 
+    - ${source_repo_artifact}
+  output_artifacts:
+    - ${resource_prefix}-tf-testing-output
+  configuration:
+    ProjectName: ${project_name}
+    EnvironmentVariables: >
+      [ 
+        {
+          name: "TARGET_DIR"
+          value: ${target_dir}
+          type: "PLAINTEXT"
+        },
+        {
+          name: "COMMANDS"
+          value: ${validate_command}
+          type: "PLAINTEXT"
+        }
+      ]
+  run_order: 1
+
+- name: tf-plan
+  category: Test
+  owner: AWS
+  provider: CodeBuild
+  version: 1
+  input_artifacts: 
+    - ${source_repo_artifact}
+  output_artifacts:
+    - dev-tf-plan-output
+  configuration:
+    ProjectName: ${project_name}
+    EnvironmentVariables: >
+      [ 
+        {
+          name: "TARGET_DIR"
+          value: ${target_dir}
+          type: "PLAINTEXT"
+        },
+        {
+          name: "COMMANDS"
+          value: ${plan_command}
+          type: "PLAINTEXT"
+        }
+      ]
+  run_order: 2
+
+- name: tf-manual-approval
+  category: Approval
+  owner: AWS
+  provider: Manual
+  version: 1
+  run_order: 3
+
+- name: tf-apply
+  category: Build
+  owner: AWS
+  provider: CodeBuild
+  version: 1
+  input_artifacts: 
+    - ${source_repo_artifact}
+  output_artifacts:
+    - dev-tf-apply-output
+  configuration:
+    ProjectName: ${project_name}
+    EnvironmentVariables: >
+      [ 
+        {
+          name: "TARGET_DIR"
+          value: ${target_dir}
+          type: "PLAINTEXT"
+        },
+        {
+          name: "COMMANDS"
+          value: ${apply_command}
+          type: "PLAINTEXT"
+        }
+      ]
+  run_order: 4
+      

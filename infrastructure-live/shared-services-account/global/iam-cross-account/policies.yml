@@ -1,0 +1,149 @@
+tf_plan_statements:
+  - sid: CodeBuildListAccess
+    effect: Allow
+    actions: 
+      - codebuild:ListSharedProjects
+      - codebuild:ListBuildBatches
+      - codebuild:ListSharedReportGroups
+      - codebuild:ListReports
+      - codebuild:ListBuilds
+      - codebuild:ListCuratedEnvironmentImages
+      - codebuild:ListReportGroups
+      - codebuild:ListSourceCredentials
+      - codebuild:ListProjects
+      - codebuild:ListRepositories
+      - codebuild:ListConnectedOAuthAccounts
+    resources:
+      - "*"
+
+  - sid: CodeBuildReadAccess
+    effect: Allow
+    actions:
+      - codebuild:BatchGetProjects
+      - codebuild:BatchGetBuildBatches
+      - codebuild:ListReportsForReportGroup
+      - codebuild:BatchGetReports
+      - codebuild:DescribeTestCases
+      - codebuild:GetResourcePolicy
+      - codebuild:DescribeCodeCoverages
+      - codebuild:ListBuildBatchesForProject
+      - codebuild:ListBuildsForProject
+      - codebuild:BatchGetReportGroups
+      - codebuild:BatchGetBuilds
+    resources:
+      - arn:aws:codebuild:*:${account_id}:report-group/*
+      - arn:aws:codebuild:*:${account_id}:project/*
+
+  - sid: CodePipelineWebhookAccess
+    effect: Allow
+    actions:
+      - codepipeline:ListWebhooks
+      - codepipeline:ListTagsForResource
+    resources:
+      - arn:aws:codepipeline:*:${account_id}:webhook:*
+      - arn:aws:codepipeline:*:${account_id}:actiontype:*/*/*/*
+
+  - sid: CodePipelineListAccess
+    effect: Allow
+    actions:
+      - codepipeline:ListPipelineExecutions
+      - codepipeline:ListActionExecutions
+      - codepipeline:GetPipeline
+      - codepipeline:ListTagsForResource
+      - codepipeline:GetPipelineState
+      - codepipeline:GetPipelineExecution
+    resources:
+      - arn:aws:codepipeline:*:${account_id}:*
+
+  - sid: CodePipelineListPipelinesAccess
+    effect: Allow
+    actions:
+      - codepipeline:ListPipelines
+      - codepipeline:GetThirdPartyJobDetails
+      - codepipeline:GetJobDetails
+      - codepipeline:ListActionTypes
+    resources:
+        - "*"
+
+  - sid: CrossAccountTerraformStateBucketReadAccess
+    effect: Allow
+    actions:
+      - sts:AsssumeRole
+    resources:
+      - arn:aws:iam::{shared_services_id}:role/limited-s3-read-access
+      - arn:aws:iam::{entrypoint_id}:role/limited-s3-read-access
+
+tf_apply_statements:
+  - sid: CodeBuildWriteAccess
+    effect: Allow
+    actions: 
+      - codebuild:Delete*
+      - codebuild:Update*
+      - codebuild:Create*
+    resources: 
+      - arn:aws:codebuild:*:${account_id}:report-group/*
+      - arn:aws:codebuild:*:${account_id}:project/*
+
+  - sid: CodeBuildWriteCredentialsAccess
+    effect: Allow
+    actions: 
+      - codebuild:ImportSourceCredentials
+      - codebuild:DeleteOAuthToken
+      - codebuild:DeleteSourceCredentials
+      - codebuild:PersistOAuthToken
+    resources: "*"
+
+  - sid: CodePipelineTransitionWriteAccess
+    effect: Allow
+    actions: 
+      - codepipeline:EnableStageTransition
+      - codepipeline:DisableStageTransition
+    resources: arn:aws:codepipeline:*:${account_id}:*/*
+
+  - sid: CodePipelineActionWriteAccess
+    effect: Allow
+    actions: 
+      - codepipeline:PutActionRevision
+    resources: 
+      - arn:aws:codepipeline:*:${account_id}:*/*/*
+
+  - sid: CodePipelineWriteAccess
+    effect: Allow
+    actions: 
+      - codepipeline:TagResource
+      - codepipeline:CreatePipeline
+      - codepipeline:UntagResource
+      - codepipeline:UpdatePipeline
+      - codepipeline:DeletePipeline
+      - codepipeline:PutWebhook
+    resources: arn:aws:codepipeline:*:${account_id}:*
+
+  - sid: CodePipelineWebhookWriteAccess
+    effect: Allow
+    actions: 
+      - codepipeline:RegisterWebhookWithThirdParty
+      - codepipeline:TagResource
+      - codepipeline:DeleteWebhook
+      - codepipeline:DeregisterWebhookWithThirdParty
+      - codepipeline:UntagResource
+      - codepipeline:CreateCustomActionType
+      - codepipeline:DeleteCustomActionType
+      - codepipeline:PutWebhook
+    resources: 
+      - arn:aws:codepipeline:*:${account_id}:webhook:*
+      - arn:aws:codepipeline:*:${account_id}:actiontype:*/*/*/*
+  
+  - sid: CodePipelineJobAccess
+    effect: Allow
+    actions: 
+      - codepipeline:AcknowledgeJob
+      - codepipeline:AcknowledgeThirdPartyJob
+    resources: "*"
+
+  - sid: CrossAccountTerraformStateBucketReadAccess
+    effect: Allow
+    actions:
+      - sts:AsssumeRole
+    resources:
+      - arn:aws:iam::${shared_services_id}:role/limited-s3-read-access
+      - arn:aws:iam::${entrypoint_id}:role/limited-s3-read-access
