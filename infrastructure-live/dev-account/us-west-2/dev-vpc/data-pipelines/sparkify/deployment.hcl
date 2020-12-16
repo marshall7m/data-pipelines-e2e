@@ -1,3 +1,3 @@
 locals {
-    cd_group_name = "sparkify"
+  cd_group_name = "sparkify"
 }

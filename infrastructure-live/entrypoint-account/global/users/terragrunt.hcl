@@ -3,7 +3,7 @@ include {
 }
 
 terraform {
-  source = ""github.com/marshall7m/tf_modules/terraform-aws-entrypoint-account-users"
+  source = "github.com/marshall7m/terraform-modules/terraform-aws-entrypoint-account-users"
 }
 
 inputs = {

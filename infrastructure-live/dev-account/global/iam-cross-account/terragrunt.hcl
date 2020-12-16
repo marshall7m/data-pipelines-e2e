@@ -3,15 +3,15 @@ include {
 }
 
 terraform {
-    source = "github.com/marshall7m/tf_modules/terraform-aws-account-iam-roles"
+  source = "github.com/marshall7m/terraform-modules/terraform-aws-account-iam-roles"
 }
 
 locals {
-  org_vars = read_terragrunt_config(find_in_parent_folders("org.hcl"))
-  entrypoint_id = local.org_vars.locals.account_ids.entrypoint
+  org_vars           = read_terragrunt_config(find_in_parent_folders("org.hcl"))
+  entrypoint_id      = local.org_vars.locals.account_ids.entrypoint
   shared_services_id = local.org_vars.locals.account_ids.shared_services
-  org = local.org_vars.locals.org
-  
+  org                = local.org_vars.locals.org
+
   infrastructure_artifact_bucket = "${local.org}-infrastructure-us-west-2"
 
   account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
@@ -20,16 +20,16 @@ locals {
   allowed_account_tf_state_buckets = ["arn:aws:s3:::private-${local.org}-${local.account_name}-us-west-2-tf-state/*"]
 }
 
-inputs = {  
+inputs = {
   admin_role_cross_account_arns = ["arn:aws:iam::${local.entrypoint_id}:root"]
   custom_admin_role_policy_arns = ["arn:aws:iam::aws:policy/AdministratorAccess"]
 
-  dev_role_cross_account_arns = ["arn:aws:iam::${local.entrypoint_id}:root"]
+  dev_role_cross_account_arns   = ["arn:aws:iam::${local.entrypoint_id}:root"]
   custom_admin_role_policy_arns = ["arn:aws:iam::aws:policy/PowerUserAccess"]
 
-  read_role_cross_account_arns = ["arn:aws:iam::${local.entrypoint_id}:root"]
+  read_role_cross_account_arns  = ["arn:aws:iam::${local.entrypoint_id}:root"]
   custom_admin_role_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
-  
+
   tf_plan_role_cross_account_arns = ["arn:aws:iam::${local.shared_services_id}:root"]
   tf_plan_allowed_actions = [
     "tag:Get*",
@@ -75,8 +75,8 @@ inputs = {
   tf_plan_allowed_resources = ["*"]
   tf_plan_statements = [
     {
-      sid = "AccountTerraformStateBucketsAccess"
-      effect = "Allow"
+      sid       = "AccountTerraformStateBucketsAccess"
+      effect    = "Allow"
       resources = local.allowed_account_tf_state_buckets
       actions = [
         "s3:GetObject"
@@ -93,14 +93,14 @@ inputs = {
     "rds:*",
     "logs:*",
     "ec2:*",
-    "s3:*", 
-    "ecr:*", 
-    "iam:GetPolicy", 
+    "s3:*",
+    "ecr:*",
+    "iam:GetPolicy",
     "iam:GetPolicyVersion",
-    "iam:GetInstanceProfile", 
+    "iam:GetInstanceProfile",
     "iam:ListEntitiesForPolicy",
-    "iam:GetRole", 
-    "iam:GetRolePolicy", 
+    "iam:GetRole",
+    "iam:GetRolePolicy",
     "iam:PassRole",
     "ssm:GetDocument",
     "ssm:DescribeAssociation",
@@ -115,8 +115,8 @@ inputs = {
 
   tf_apply_statements = [
     {
-      sid = "AccountTerraformStateBucketsAccess"
-      effect = "Allow"
+      sid       = "AccountTerraformStateBucketsAccess"
+      effect    = "Allow"
       resources = local.allowed_account_tf_state_buckets
       actions = [
         "s3:PutObject",
@@ -128,7 +128,7 @@ inputs = {
   auto_deploy_role_cross_account_arns = ["arn:aws:iam::${local.shared_services_id}:root"]
   auto_deploy_statements = [
     {
-      effect = "Allow"
+      effect    = "Allow"
       resources = ["*"]
       actions = [
         "codedeploy:CreateDeployment",
@@ -139,13 +139,13 @@ inputs = {
       ]
     },
     {
-       effect = "Allow"
-       resources = ["arn:aws:s3:::${local.infrastructure_artifact_bucket}/*"]
-       actions = [
-         "s3:GetObject*",
-         "s3:PutObject",
-         "s3:PutObjectAcl"    
-       ]
-     }
+      effect    = "Allow"
+      resources = ["arn:aws:s3:::${local.infrastructure_artifact_bucket}/*"]
+      actions = [
+        "s3:GetObject*",
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ]
+    }
   ]
 }

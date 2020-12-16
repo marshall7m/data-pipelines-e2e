@@ -18,18 +18,19 @@
       category: Test
       owner: AWS
       provider: CodeBuild
+      role_arn: ${tf_build_role_arn}
       version: 1
       input_artifacts: 
         - ${branch_name}
       output_artifacts:
         - entrypoint-tf-testing-output
       configuration:
-        ProjectName: ${project_name}
+        ProjectName: ${tf_build_name}
         EnvironmentVariables: >-
           [ 
             {
               "name": "TARGET_DIR",
-              "value": "entrypoint-account/",
+              "value": "${infrastructure_dir}/entrypoint-account/",
               "type": "PLAINTEXT"
             },
             {
@@ -44,18 +45,19 @@
       category: Test
       owner: AWS
       provider: CodeBuild
+      role_arn: ${tf_build_role_arn}
       version: 1
       input_artifacts: 
         - ${branch_name}
       output_artifacts:
         - entrypoint-tf-plan-output
       configuration:
-        ProjectName: ${project_name}
+        ProjectName: ${tf_build_name}
         EnvironmentVariables: >-
           [ 
             {
               "name": "TARGET_DIR",
-              "value": "entrypoint-account/",
+              "value": "${infrastructure_dir}/entrypoint-account/",
               "type": "PLAINTEXT"
             },
             {
@@ -77,18 +79,19 @@
       category: Build
       owner: AWS
       provider: CodeBuild
+      role_arn: ${tf_build_role_arn}
       version: 1
       input_artifacts: 
         - ${branch_name}
       output_artifacts:
         - entrypoint-tf-apply-output
       configuration:
-        ProjectName: ${project_name}
+        ProjectName: ${tf_build_name}
         EnvironmentVariables: >-
           [ 
             {
               "name": "TARGET_DIR",
-              "value": "entrypoint-account/",
+              "value": "${infrastructure_dir}/entrypoint-account/",
               "type": "PLAINTEXT"
             },
             {
@@ -105,18 +108,19 @@
       category: Test
       owner: AWS
       provider: CodeBuild
+      role_arn: ${tf_build_role_arn}
       version: 1
       input_artifacts: 
         - ${branch_name}
       output_artifacts:
         - shared-services-tf-testing-output
       configuration:
-        ProjectName: ${project_name}
+        ProjectName: ${tf_build_name}
         EnvironmentVariables: >-
           [ 
             {
               "name": "TARGET_DIR",
-              "value": "shared-services-account/",
+              "value": "${infrastructure_dir}/shared-services-account/",
               "type": "PLAINTEXT"
             },
             {
@@ -131,18 +135,19 @@
       category: Test
       owner: AWS
       provider: CodeBuild
+      role_arn: ${tf_build_role_arn}
       version: 1
       input_artifacts: 
         - ${branch_name}
       output_artifacts:
         - shared-services-tf-plan-output
       configuration:
-        ProjectName: ${project_name}
+        ProjectName: ${tf_build_name}
         EnvironmentVariables: >-
           [ 
             {
               "name": "TARGET_DIR",
-              "value": "shared-services-account/",
+              "value": "${infrastructure_dir}/shared-services-account/",
               "type": "PLAINTEXT"
             },
             {
@@ -164,18 +169,19 @@
       category: Build
       owner: AWS
       provider: CodeBuild
+      role_arn: ${tf_build_role_arn}
       version: 1
       input_artifacts: 
         - ${branch_name}
       output_artifacts:
         - shared-services-tf-apply-output
       configuration:
-        ProjectName: ${project_name}
+        ProjectName: ${tf_build_name}
         EnvironmentVariables: >-
           [ 
             {
               "name": "TARGET_DIR",
-              "value": "shared-services-account/",
+              "value": "${infrastructure_dir}/shared-services-account/",
               "type": "PLAINTEXT"
             },
             {
@@ -192,18 +198,19 @@
       category: Test
       owner: AWS
       provider: CodeBuild
+      role_arn: ${tf_build_role_arn}
       version: 1
       input_artifacts: 
         - ${branch_name}
       output_artifacts:
         - dev-tf-testing-output
       configuration:
-        ProjectName: ${project_name}
+        ProjectName: ${tf_build_name}
         EnvironmentVariables: >-
           [ 
             {
               "name": "TARGET_DIR",
-              "value": "dev-account/",
+              "value": "${infrastructure_dir}/dev-account/",
               "type": "PLAINTEXT"
             },
             {
@@ -218,18 +225,19 @@
       category: Test
       owner: AWS
       provider: CodeBuild
+      role_arn: ${tf_build_role_arn}
       version: 1
       input_artifacts: 
         - ${branch_name}
       output_artifacts:
         - dev-tf-plan-output
       configuration:
-        ProjectName: ${project_name}
+        ProjectName: ${tf_build_name}
         EnvironmentVariables: >-
           [ 
             {
               "name": "TARGET_DIR",
-              "value": "dev-account/",
+              "value": "${infrastructure_dir}/dev-account/",
               "type": "PLAINTEXT"
             },
             {
@@ -251,18 +259,19 @@
       category: Build
       owner: AWS
       provider: CodeBuild
+      role_arn: ${tf_build_role_arn}
       version: 1
       input_artifacts: 
         - ${branch_name}
       output_artifacts:
         - dev-tf-apply-output
       configuration:
-        ProjectName: ${project_name}
+        ProjectName: ${tf_build_name}
         EnvironmentVariables: >-
           [ 
             {
               "name": "TARGET_DIR",
-              "value": "dev-account/",
+              "value": "${infrastructure_dir}/dev-account/",
               "type": "PLAINTEXT"
             },
             {

@@ -31,7 +31,7 @@ phases:
           for command in "${COMMANDS[@]}"; do
             echo ""
             echo "*************** Executing Command: ${command} ******************"
-            echo "******* At directory: ${$TARGET_DIR} ********"
+            echo "******* At directory: ${TARGET_DIR} ********"
             echo "*************************************************"
             $command || exit 1
           done

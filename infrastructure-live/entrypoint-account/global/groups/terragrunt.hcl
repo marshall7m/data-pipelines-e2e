@@ -1,5 +1,5 @@
 dependency "users" {
-    config_path = "../users"
+  config_path = "../users"
 }
 
 include {
@@ -9,11 +9,11 @@ include {
 
 locals {
   account_ids = read_terragrunt_config(find_in_parent_folders("org.hcl"))
-  aws_dev_id = local.account_ids.locals.account_ids.dev
+  aws_dev_id  = local.account_ids.locals.account_ids.dev
 }
 
 terraform {
-  source = ""github.com/marshall7m/tf_modules/terraform-aws-iam-entrypoint-account-groups"
+  source = "github.com/marshall7m/terraform-modules/terraform-aws-iam-entrypoint-account-groups"
 }
 
 inputs = {
